@@ -2,7 +2,6 @@ import json
 import os
 from datetime import datetime, timedelta
 import streamlit as st
-import streamlit.components.v1 as components
 
 st.set_page_config(
     page_title="매일 튼튼 재활 일지 & 통합 임상 케어",
@@ -193,7 +192,7 @@ tab1, tab2, tab3, tab4 = st.tabs([
     "📊 종합 요약",
     f"✍️ 일지 기록 {'🔓' if is_owner else '🔒'}",
     "💬 원장님 소견 (OPEN)",
-    "🩺 50년 임상 처방",
+    "🩺 50년 임상 처방 (참조)",
 ])
 
 with tab1:
@@ -211,10 +210,9 @@ with tab1:
     p_cols = st.columns(2)
     for idx, m in enumerate(PART_META):
         p_data = current_log["parts"][m["key"]]
+        note_text = p_data["note"] or m["desc"]
         with p_cols[idx % 2]:
-            st.info(f"**{m['name']}**: VAS **{p_data['score']}점**
-
-- {p_data['note'] or m['desc']}")
+            st.info(f"**{m['name']}**: VAS **{p_data['score']}점**  \n- {note_text}")
 
     st.markdown("#### 🏋️ 오늘 수행한 개인 운동 요약")
     if not workouts:
@@ -386,37 +384,35 @@ with tab3:
     p = current_log["parts"]
     workouts = current_log.get("workoutList", [])
     done_cnt = sum(1 for w in workouts if w.get("done"))
-    w_lines = "
-".join([f"  {'✅' if w.get('done') else '⬜'} {w['text']}" for w in workouts]) or "  - 등록된 개인 운동 없음"
-    share_txt = f"""[매일 튼튼 재활 일지 & 원장님 소견 - {current_log['date']}]
-👤 환자: 만 31세 남성 (189cm, 93kg, 좌식 {current_log['sleep']['sittingHours']}시간)
-🌙 수면 만족도: {current_log['sleep']['score']}/5점 | 야간 각성: {current_log['sleep']['wakeUpCount']}회
-🛏️ 수면 중 요추 상태: {current_log['sleep']['posture']}
-
-📊 [6대 부위 통증 수치 (VAS 0~10)]
-1. 허리(요추): {p['lumbar']['score']}점 ({p['lumbar']['note'] or '-'})
-2. 왼쪽 고관절: {p['leftHip']['score']}점 ({p['leftHip']['note'] or '-'})
-3. 왼쪽 전면 어깨: {p['leftAnteriorShoulder']['score']}점 ({p['leftAnteriorShoulder']['note'] or '-'})
-4. 오른쪽 손목: {p['rightWrist']['score']}점 ({p['rightWrist']['note'] or '-'})
-5. 오른쪽 무릎: {p['rightKnee']['score']}점 ({p['rightKnee']['note'] or '-'})
-6. 목(일자목): {p['cervical']['score']}점 ({p['cervical']['note'] or '-'})
-
-🏋️ [오늘 수행한 개인 운동 ({done_cnt}/{len(workouts)} 완료) 및 컨디션 메모]
-{w_lines}
-📝 메모: {current_log.get('patientWorkoutNote') or '기록 없음'}
-
-💬 [{d_name} 소견 및 처방]
-• 중점 타겟: {d_target or '-'}
-• 문진 체크: {d_inq or '-'}
-• 평가 소견: {d_ass or '-'}
-• 운동 처방: {d_pre or '-'}"""
+    w_lines = "\n".join([f"  {'✅' if w.get('done') else '⬜'} {w['text']}" for w in workouts]) or "  - 등록된 개인 운동 없음"
+    share_txt = (
+        f"[매일 튼튼 재활 일지 & 원장님 소견 - {current_log['date']}]\n"
+        f"👤 환자: 만 31세 남성 (189cm, 93kg, 좌식 {current_log['sleep']['sittingHours']}시간)\n"
+        f"🌙 수면 만족도: {current_log['sleep']['score']}/5점 | 야간 각성: {current_log['sleep']['wakeUpCount']}회\n"
+        f"🛏️ 수면 중 요추 상태: {current_log['sleep']['posture']}\n\n"
+        f"📊 [6대 부위 통증 수치 (VAS 0~10)]\n"
+        f"1. 허리(요추): {p['lumbar']['score']}점 ({p['lumbar']['note'] or '-'})\n"
+        f"2. 왼쪽 고관절: {p['leftHip']['score']}점 ({p['leftHip']['note'] or '-'})\n"
+        f"3. 왼쪽 전면 어깨: {p['leftAnteriorShoulder']['score']}점 ({p['leftAnteriorShoulder']['note'] or '-'})\n"
+        f"4. 오른쪽 손목: {p['rightWrist']['score']}점 ({p['rightWrist']['note'] or '-'})\n"
+        f"5. 오른쪽 무릎: {p['rightKnee']['score']}점 ({p['rightKnee']['note'] or '-'})\n"
+        f"6. 목(일자목): {p['cervical']['score']}점 ({p['cervical']['note'] or '-'})\n\n"
+        f"🏋️ [오늘 수행한 개인 운동 ({done_cnt}/{len(workouts)} 완료) 및 컨디션 메모]\n"
+        f"{w_lines}\n"
+        f"📝 메모: {current_log.get('patientWorkoutNote') or '기록 없음'}\n\n"
+        f"💬 [{d_name} 소견 및 처방]\n"
+        f"• 중점 타겟: {d_target or '-'}\n"
+        f"• 문진 체크: {d_inq or '-'}\n"
+        f"• 평가 소견: {d_ass or '-'}\n"
+        f"• 운동 처방: {d_pre or '-'}"
+    )
     st.code(share_txt, language="markdown")
 
 with tab4:
-    st.markdown("#### 🩺 50년 임상 권위자 황원택 원장의 4단 융합 임상 처방전")
-    st.markdown("""
-- **1단계 · 공감 및 맞춤 문진:** 189cm, 93kg의 건장한 체격으로 장시간 좌식 근무를 하시느라 척추와 관절의 지렛대 하중이 매우 큰 상태입니다. 수면 중 다리를 쭉 펴실 때 요추가 들뜨는지, 기립 시 왼쪽 고관절이 뻣뻣해 오른쪽 무릎에 체중을 싣는지 확인해 보세요.
-- **2단계 · 원인 분석 (전신 나선형 교차 보상 증후군):** 좌식으로 인해 단축된 **왼쪽 장요근**이 수면 시 요추를 잡아당겨 야간 허리 불편감을 만들고, 보행 시 충격이 반대편 **오른쪽 무릎**으로 쏠립니다. 상체에서는 낮은 모니터로 인한 **일자목(사각근 긴장)**이 팔 신경을 압박해 **오른쪽 손목**과 **왼쪽 전면 어깨(소흉근 단축)**의 비대칭 통증을 유발합니다.
-- **3단계 · 대처 방안:** 취침 시 무릎 오금 아래에 높은 베개를 받쳐 장요근 긴장을 즉시 완화하세요. 오른쪽 손목 통증 시 상류 신경 통로인 오른쪽 목 옆(사각근)·겨드랑이를 먼저 풀어주고, 오른쪽 무릎 통증 시 반대쪽 왼쪽 장요근·중둔근을 이완하는 것이 50년 실전 비법입니다.
-- **4단계 · 생활 수칙:** 개인 운동 목록에 **런지 좌측 장요근 이완, 문틀 좌측 소흉근 스트레칭, 우측 정중신경 글라이딩**을 등록해 매일 체크하시고, 하루 2L 미온수 섭취와 오메가-3·마그네슘이 풍부한 식단을 병행하세요.
-""")
+    st.markdown("#### 🩺 50년 임상 권위자 황원택 원장의 4단 융합 임상 처방전 (참조용)")
+    st.markdown(
+        "- **1단계 · 공감 및 맞춤 문진:** 189cm, 93kg의 건장한 체격으로 장시간 좌식 근무를 하시느라 척추와 관절의 지렛대 하중이 매우 큰 상태입니다. 수면 중 다리를 쭉 펴실 때 요추가 들뜨는지, 기립 시 왼쪽 고관절이 뻣뻣해 오른쪽 무릎에 체중을 싣는지 확인해 보세요.\n"
+        "- **2단계 · 원인 분석 (전신 나선형 교차 보상 증후군):** 좌식으로 인해 단축된 **왼쪽 장요근**이 수면 시 요추를 잡아당겨 야간 허리 불편감을 만들고, 보행 시 충격이 반대편 **오른쪽 무릎**으로 쏠립니다. 상체에서는 낮은 모니터로 인한 **일자목(사각근 긴장)**이 팔 신경을 압박해 **오른쪽 손목**과 **왼쪽 전면 어깨(소흉근 단축)**의 비대칭 통증을 유발합니다.\n"
+        "- **3단계 · 대처 방안:** 취침 시 무릎 오금 아래에 높은 베개를 받쳐 장요근 긴장을 즉시 완화하세요. 오른쪽 손목 통증 시 상류 신경 통로인 오른쪽 목 옆(사각근)·겨드랑이를 먼저 풀어주고, 오른쪽 무릎 통증 시 반대쪽 왼쪽 장요근·중둔근을 이완하는 것이 50년 실전 비법입니다.\n"
+        "- **4단계 · 생활 수칙:** 개인 운동 목록에 **런지 좌측 장요근 이완, 문틀 좌측 소흉근 스트레칭, 우측 정중신경 글라이딩**을 등록해 매일 체크하시고, 하루 2L 미온수 섭취와 오메가-3·마그네슘이 풍부한 식단을 병행하세요."
+    )
