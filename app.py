@@ -2,15 +2,17 @@ import json
 import os
 from datetime import datetime, timedelta
 import streamlit as st
+import streamlit.components.v1 as components
 
 st.set_page_config(
-    page_title="매일 튼튼 재활 일지 & 통합 임상 케어",
+    page_title="매일 튼튼 재활 일지 & 황원택 원장 통합 임상 케어",
     page_icon="🩺",
     layout="centered",
     initial_sidebar_state="collapsed",
 )
 
 DB_FILE = "rehab_shared_data.json"
+SCHEMA_VERSION = "2026-11-16-v5"
 
 PART_META = [
     {"key": "lumbar", "name": "1. 허리 (요추 부위)", "side": "중앙 코어", "desc": "수면 시 불편감 및 좌식 디스크 하중"},
@@ -21,9 +23,18 @@ PART_META = [
     {"key": "cervical", "name": "6. 목 (일자목)", "side": "상부 코어", "desc": "모니터 높이에 따른 경추 전만 소실"},
 ]
 
+CAPTURED_WORKOUTS = [
+    {"id": "w-cap-1", "text": "무릎꿇고 골반 하늘로 올리기 12초씩 3세트", "done": True},
+    {"id": "w-cap-2", "text": "플랭크 1분씩( 다리 하나씩 10초씩 들기) 2세트", "done": True},
+    {"id": "w-cap-3", "text": "사이드로 누워서 팔로 바닥 버티면서 의자 다리올려서 버티기 2세트", "done": True},
+    {"id": "w-cap-4", "text": "어깨 슈러그 30회 3세트 (16kg)", "done": True},
+    {"id": "w-cap-5", "text": "다리한쪽 올려서 옆으로 돌리기 10회씩 3세트", "done": True},
+]
+
 DEFAULT_DATA = {
+    "schemaVersion": SCHEMA_VERSION,
     "ownerPin": "0208",
-    "selectedDate": "2026-11-13",
+    "selectedDate": "2026-11-15",
     "logs": [
         {
             "date": "2026-11-11",
@@ -78,25 +89,63 @@ DEFAULT_DATA = {
             "date": "2026-11-13",
             "sleep": {"score": 4, "posture": "뒤척일 때 뻐근함", "wakeUpCount": 0, "sittingHours": 8},
             "parts": {
-                "lumbar": {"score": 4, "note": "중간에 깨지 않고 숙면함, 아침 강직만 약간 있음"},
-                "leftHip": {"score": 4, "note": "의자에서 일어날 때 펴지는 속도가 빨라짐"},
-                "leftAnteriorShoulder": {"score": 3, "note": "어깨 앞쪽 말림이 줄어든 느낌"},
-                "rightWrist": {"score": 3, "note": "손목 보호대 착용 및 겨드랑이·목 신경길 스트레칭 효과 좋음"},
-                "rightKnee": {"score": 3, "note": "계단 내려갈 때 통증 거의 없음"},
-                "cervical": {"score": 4, "note": "50분마다 알람 맞춰 일어나 기지개 켬"},
+                "lumbar": {"score": 3, "note": "중간에 깨지 않고 숙면함, 아침 강직만 약간 있음"},
+                "leftHip": {"score": 3, "note": "고관절이 심하게 회전될때"},
+                "leftAnteriorShoulder": {"score": 3, "note": "왼쪽으로 몸이 기울때, 아픔"},
+                "rightWrist": {"score": 2, "note": "체중 싣고 땅짚을때"},
+                "rightKnee": {"score": 1, "note": "스쿼트 할때"},
+                "cervical": {"score": 2, "note": "가끔 컴퓨터할때 뻐근함"},
             },
-            "workoutList": [
-                {"id": "w-301", "text": "50분 좌식 후 3분 기립 스트레칭 루틴 실천", "done": True},
-                {"id": "w-302", "text": "런지 좌측 장요근 및 문틀 좌측 소흉근 이완 4세트", "done": True},
-                {"id": "w-303", "text": "글루트 브릿지 둔근 활성화 15회×3세트", "done": False},
-            ],
+            "workoutList": json.loads(json.dumps(CAPTURED_WORKOUTS)),
             "patientWorkoutNote": "낮 동안 50:3 루틴과 장요근·소흉근 이완 완료, 저녁에 브릿지 추가 예정",
             "directorOpinion": {
                 "directorName": "황인준 PT 원장",
                 "focusTarget": "둔근(엉덩이 근육) 활성화 및 코어 안정화 진입",
                 "inquiry": "오늘 PT 수업 전 브릿지 동작 시 허리가 먼저 쓰이는지, 엉덩이에 힘이 잘 들어오는지 체크해 볼게요!",
                 "assessment": "수면 만족도가 4점으로 올라오면서 전신 근막 긴장도가 눈에 띄게 떨어졌습니다. 좌고관절-우무릎 대각선 사슬이 안정화 단계에 진입했습니다.",
-                "prescription": "통증이 3~4점대로 안정되었으므로, 오늘부터는 이완 후 글루트 브릿지(15회×3세트)와 버드독 코어 안정화 운동을 본 운동에 추가합니다.",
+                "prescription": "통증이 1~3점대로 안정되었으므로, 무릎 꿇고 골반 올리기와 플랭크·코펜하겐 사이드 버티기 등 코어·둔근 강화 루틴을 유지합니다.",
+            },
+        },
+        {
+            "date": "2026-11-14",
+            "sleep": {"score": 4, "posture": "뒤척일 때 뻐근함", "wakeUpCount": 0, "sittingHours": 8},
+            "parts": {
+                "lumbar": {"score": 2, "note": "중간에 깨지 않고 숙면함, 아침 강직만 약간 있음"},
+                "leftHip": {"score": 2, "note": "고관절이 심하게 회전될때"},
+                "leftAnteriorShoulder": {"score": 1, "note": "왼쪽으로 몸이 기울때, 아픔"},
+                "rightWrist": {"score": 0, "note": "체중 싣고 땅짚을때"},
+                "rightKnee": {"score": 1, "note": "스쿼트 할때"},
+                "cervical": {"score": 2, "note": "가끔 컴퓨터할때 뻐근함"},
+            },
+            "workoutList": json.loads(json.dumps(CAPTURED_WORKOUTS)),
+            "patientWorkoutNote": "5대 개인 재활 운동 루틴 전체 완료! 오른쪽 손목 통증은 0점으로 소실됨",
+            "directorOpinion": {
+                "directorName": "황인준 PT 원장",
+                "focusTarget": "좌측 어깨 지지 안정성 및 고관절 회전 가동범위 정밀 제어",
+                "inquiry": "사이드로 누워 팔로 버틸 때 왼쪽 어깨 앞쪽이 밀리지 않도록 팔꿈치를 갈비뼈 쪽으로 살짝 당겨 지지해 보세요.",
+                "assessment": "6대 부위 평균 통증이 1.3점으로 최저치를 기록했습니다. 우측 손목(0점)과 좌측 전면 어깨(1점), 우측 무릎(1점) 모두 뚜렷한 호전세입니다.",
+                "prescription": "다리 한쪽 올려 옆으로 돌리기 수행 시 고관절에서 소리가 나거나 집히지 않는 작은 각도(60~70%)에서만 부드럽게 회전해 주세요.",
+            },
+        },
+        {
+            "date": "2026-11-15",
+            "sleep": {"score": 3, "posture": "뒤척일 때 뻐근함", "wakeUpCount": 0, "sittingHours": 0},
+            "parts": {
+                "lumbar": {"score": 3, "note": "중간에 깨지 않고 숙면함, 아침 강직만 약간 있음"},
+                "leftHip": {"score": 3, "note": "고관절이 심하게 회전될때"},
+                "leftAnteriorShoulder": {"score": 1, "note": "왼쪽으로 몸이 기울때, 아픔"},
+                "rightWrist": {"score": 0, "note": "체중 싣고 땅짚을때"},
+                "rightKnee": {"score": 1, "note": "스쿼트 할때"},
+                "cervical": {"score": 2, "note": "가끔 컴퓨터할때 뻐근함"},
+            },
+            "workoutList": json.loads(json.dumps(CAPTURED_WORKOUTS)),
+            "patientWorkoutNote": "일요일이여서 오래자고 싶었는데 7시반에 깨서 잠 만족도가 별로임.",
+            "directorOpinion": {
+                "directorName": "황인준 PT 원장",
+                "focusTarget": "일요일 조기 각성에 따른 요추·고관절 조조강직 이완",
+                "inquiry": "휴일에 7시 반에 일찍 깨셨을 때 허리 뻐근함 때문에 잠이 깬 것인지, 습관적 생체리듬으로 깬 것인지 확인해 볼게요.",
+                "assessment": "좌식 시간은 0시간으로 휴식을 취했으나, 수면 만족도가 3점으로 낮아지면서 요추(3점)와 좌측 고관절(3점)의 아침 강직도가 전일 대비 1점씩 소폭 반응했습니다.",
+                "prescription": "아침에 일찍 깨셨을 때는 바로 일어나지 마시고 침대 위에서 무릎을 세워 좌우로 살살 흔들어주는 요추·고관절 웜업을 2분간 먼저 시행해 주세요.",
             },
         },
     ],
@@ -107,7 +156,9 @@ def load_shared_db():
     if os.path.exists(DB_FILE):
         try:
             with open(DB_FILE, "r", encoding="utf-8") as f:
-                return json.load(f)
+                saved = json.load(f)
+            if saved.get("schemaVersion") == SCHEMA_VERSION:
+                return saved
         except Exception:
             pass
     with open(DB_FILE, "w", encoding="utf-8") as f:
@@ -116,8 +167,421 @@ def load_shared_db():
 
 
 def save_shared_db(data):
+    data["schemaVersion"] = SCHEMA_VERSION
     with open(DB_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
+
+
+def get_node_color(score):
+    if score <= 3:
+        return "#10b981"  # Green (0~3 양호)
+    if score <= 6:
+        return "#f59e0b"  # Amber (4~6 주의)
+    return "#ef4444"      # Red (7~10 경고)
+
+
+def get_badge_style(score):
+    if score <= 3:
+        return "background:#dcfce7;color:#166534;border:1px solid #86efac;"
+    if score <= 6:
+        return "background:#fef3c7;color:#92400e;border:1px solid #fde68a;"
+    return "background:#fee2e2;color:#991b1b;border:1px solid #fca5a5;"
+
+
+def render_visual_body_dashboard(current_log, prev_log, all_logs):
+    p = current_log["parts"]
+    s = current_log["sleep"]
+    workouts = current_log.get("workoutList", [])
+    done_cnt = sum(1 for w in workouts if w.get("done"))
+    total_cnt = len(workouts)
+    pct = int(round((done_cnt / total_cnt) * 100)) if total_cnt > 0 else 0
+
+    scores = [p[m["key"]]["score"] for m in PART_META]
+    avg_pain = round(sum(scores) / len(scores), 1)
+
+    diff_html = "<span style='color:#64748b;font-size:12px;'>첫 기준 기록일</span>"
+    if prev_log:
+        prev_scores = [prev_log["parts"][m["key"]]["score"] for m in PART_META]
+        prev_avg = round(sum(prev_scores) / len(prev_scores), 1)
+        diff = round(avg_pain - prev_avg, 1)
+        if diff < 0:
+            diff_html = f"<span style='color:#0d9488;font-weight:700;font-size:12px;'>전일 대비 ▼ {abs(diff)}점 호전</span>"
+        elif diff > 0:
+            diff_html = f"<span style='color:#e11d48;font-weight:700;font-size:12px;'>전일 대비 ▲ +{diff}점 상승</span>"
+        else:
+            diff_html = "<span style='color:#64748b;font-weight:600;font-size:12px;'>전일과 동일</span>"
+
+    stars = "★" * s["score"] + "☆" * (5 - s["score"])
+
+    cards_html = ""
+    for m in PART_META:
+        key = m["key"]
+        item = p[key]
+        sc = item["score"]
+        note = item["note"] or m["desc"]
+        delta_badge = ""
+        if prev_log:
+            d = sc - prev_log["parts"][key]["score"]
+            if d < 0:
+                delta_badge = f"<span style='color:#0d9488;font-size:11px;font-weight:700;margin-right:4px;'>▼{d}</span>"
+            elif d > 0:
+                delta_badge = f"<span style='color:#e11d48;font-size:11px;font-weight:700;margin-right:4px;'>▲+{d}</span>"
+
+        cards_html += f"""
+        <div style="padding:11px 13px;border-radius:12px;border:1px solid #e2e8f0;background:#f8fafc;display:flex;flex-direction:column;justify-content:space-between;">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
+            <span style="font-size:13px;font-weight:700;color:#1e293b;">{m['name']}</span>
+            <div style="display:flex;align-items:center;">
+              {delta_badge}
+              <span style="padding:2px 8px;border-radius:6px;font-size:12px;font-weight:800;{get_badge_style(sc)}">VAS {sc}점</span>
+            </div>
+          </div>
+          <div style="font-size:12px;color:#475569;margin-top:6px;line-height:1.4;">• {note}</div>
+        </div>
+        """
+
+    trend_rows = ""
+    for l in all_logs[-5:]:
+        l_scores = [l["parts"][m["key"]]["score"] for m in PART_META]
+        l_avg = round(sum(l_scores) / len(l_scores), 1)
+        bar_w = max(8, int(l_avg * 10))
+        is_sel = l["date"] == current_log["date"]
+        row_bg = "background:#f0fdfa;border:1px solid #99f6e4;" if is_sel else "background:#f8fafc;border:1px solid #f1f5f9;"
+        bar_col = get_node_color(l_avg)
+        trend_rows += f"""
+        <div style="display:flex;align-items:center;gap:10px;padding:6px 10px;border-radius:8px;{row_bg}">
+          <span style="width:52px;font-size:12px;font-weight:{'800' if is_sel else '600'};color:#0f172a;">{l['date'][5:]}</span>
+          <span style="width:68px;font-size:11px;color:#f59e0b;font-weight:700;">수면 ★{l['sleep']['score']}</span>
+          <div style="flex:1;height:10px;background:#e2e8f0;border-radius:999px;overflow:hidden;">
+            <div style="width:{bar_w}%;height:100%;background:{bar_col};border-radius:999px;"></div>
+          </div>
+          <span style="width:64px;text-align:right;font-size:12px;font-weight:800;color:#1e293b;">평균 {l_avg}점</span>
+        </div>
+        """
+
+    html_code = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8" />
+      <style>
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+        body {{
+          font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+          margin: 0;
+          padding: 2px;
+          background: transparent;
+          color: #1e293b;
+        }}
+        .top-grid {{
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 10px;
+          margin-bottom: 14px;
+        }}
+        @media (max-width: 640px) {{
+          .top-grid {{ grid-template-columns: repeat(2, 1fr); }}
+        }}
+        .metric-card {{
+          background: #ffffff;
+          border: 1px solid #e2e8f0;
+          border-radius: 14px;
+          padding: 12px 14px;
+          box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+        }}
+        .main-card {{
+          background: #ffffff;
+          border: 1px solid #e2e8f0;
+          border-radius: 16px;
+          padding: 16px;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+          margin-bottom: 14px;
+        }}
+        .body-layout {{
+          display: grid;
+          grid-template-columns: 220px 1fr;
+          gap: 16px;
+          align-items: center;
+        }}
+        @media (max-width: 680px) {{
+          .body-layout {{ grid-template-columns: 1fr; }}
+        }}
+        .parts-grid {{
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 10px;
+        }}
+        @media (max-width: 520px) {{
+          .parts-grid {{ grid-template-columns: 1fr; }}
+        }}
+      </style>
+    </head>
+    <body>
+      <div class="top-grid">
+        <div class="metric-card">
+          <div style="font-size:12px;color:#64748b;font-weight:600;">선택일 평균 통증 (VAS)</div>
+          <div style="display:flex;align-items:baseline;gap:4px;margin-top:4px;">
+            <span style="font-size:24px;font-weight:800;color:#0f172a;">{avg_pain}</span>
+            <span style="font-size:12px;color:#94a3b8;">/ 10점</span>
+          </div>
+          <div style="margin-top:4px;">{diff_html}</div>
+        </div>
+
+        <div class="metric-card">
+          <div style="font-size:12px;color:#64748b;font-weight:600;">수면 만족도 & 요추</div>
+          <div style="font-size:17px;font-weight:800;color:#f59e0b;margin-top:5px;">{stars} ({s['score']}점)</div>
+          <div style="font-size:11px;color:#e11d48;font-weight:600;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">요추: {s['posture']}</div>
+        </div>
+
+        <div class="metric-card">
+          <div style="font-size:12px;color:#64748b;font-weight:600;">좌식 시간 / 야간 각성</div>
+          <div style="font-size:21px;font-weight:800;color:#0f172a;margin-top:4px;">{s['sittingHours']}시간 좌식</div>
+          <div style="font-size:12px;color:#64748b;margin-top:4px;">야간 각성 {s['wakeUpCount']}회</div>
+        </div>
+
+        <div class="metric-card" style="border-color:#99f6e4;background:#f0fdfa;">
+          <div style="font-size:12px;color:#0f766e;font-weight:700;">오늘의 개인 운동 달성</div>
+          <div style="display:flex;align-items:baseline;gap:6px;margin-top:4px;">
+            <span style="font-size:21px;font-weight:800;color:#115e59;">{done_cnt}/{total_cnt}</span>
+            <span style="font-size:12px;font-weight:700;color:#0d9488;">({pct}%)</span>
+          </div>
+          <div style="width:100%;height:6px;background:#ccfbf1;border-radius:999px;margin-top:7px;overflow:hidden;">
+            <div style="width:{pct}%;height:100%;background:#0d9488;"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="main-card">
+        <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px;">
+          <div>
+            <div style="font-size:15px;font-weight:800;color:#0f172a;">🧍 6대 집중 관리 부위 밸런스 맵 (전면 기준 · {current_log['date']})</div>
+            <div style="font-size:12px;color:#64748b;margin-top:2px;">점선은 좌고관절 ↔ 우무릎 / 우손목 ↔ 좌어깨 대각선 교차 보상 사슬을 나타냅니다</div>
+          </div>
+          <div style="display:flex;gap:6px;font-size:11px;font-weight:700;">
+            <span style="padding:2px 8px;border-radius:6px;background:#dcfce7;color:#166534;border:1px solid #86efac;">0~3 양호</span>
+            <span style="padding:2px 8px;border-radius:6px;background:#fef3c7;color:#92400e;border:1px solid #fde68a;">4~6 주의</span>
+            <span style="padding:2px 8px;border-radius:6px;background:#fee2e2;color:#991b1b;border:1px solid #fca5a5;">7~10 경고</span>
+          </div>
+        </div>
+
+        <div class="body-layout">
+          <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:14px;padding:10px;display:flex;flex-direction:column;align-items:center;">
+            <div style="width:100%;display:flex;justify-content:space-between;font-size:11px;font-weight:700;color:#94a3b8;margin-bottom:2px;">
+              <span>환자 우측 (R)</span>
+              <span>환자 좌측 (L)</span>
+            </div>
+            <svg viewBox="0 0 220 310" width="185" height="255">
+              <circle cx="110" cy="32" r="19" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1.5"/>
+              <rect x="102" y="51" width="16" height="16" rx="4" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1.5"/>
+              <path d="M75 67 H145 L138 162 H82 Z" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1.5"/>
+              <rect x="53" y="69" width="18" height="86" rx="8" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1.5"/>
+              <rect x="149" y="69" width="18" height="86" rx="8" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1.5"/>
+              <rect x="82" y="162" width="24" height="122" rx="9" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1.5"/>
+              <rect x="114" y="162" width="24" height="122" rx="9" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1.5"/>
+
+              <line x1="128" y1="170" x2="94" y2="228" stroke="#e11d48" stroke-width="2" stroke-dasharray="4 3" />
+              <line x1="62" y1="152" x2="146" y2="80" stroke="#d97706" stroke-width="1.8" stroke-dasharray="3 3" />
+
+              <circle cx="110" cy="60" r="11" fill="{get_node_color(p['cervical']['score'])}" stroke="#ffffff" stroke-width="2"/>
+              <text x="110" y="64" text-anchor="middle" fill="#ffffff" font-size="10" font-weight="bold">{p['cervical']['score']}</text>
+
+              <circle cx="146" cy="80" r="11" fill="{get_node_color(p['leftAnteriorShoulder']['score'])}" stroke="#ffffff" stroke-width="2"/>
+              <text x="146" y="84" text-anchor="middle" fill="#ffffff" font-size="10" font-weight="bold">{p['leftAnteriorShoulder']['score']}</text>
+
+              <circle cx="110" cy="138" r="13" fill="{get_node_color(p['lumbar']['score'])}" stroke="#ffffff" stroke-width="2"/>
+              <text x="110" y="142" text-anchor="middle" fill="#ffffff" font-size="11" font-weight="bold">{p['lumbar']['score']}</text>
+
+              <circle cx="62" cy="152" r="11" fill="{get_node_color(p['rightWrist']['score'])}" stroke="#ffffff" stroke-width="2"/>
+              <text x="62" y="156" text-anchor="middle" fill="#ffffff" font-size="10" font-weight="bold">{p['rightWrist']['score']}</text>
+
+              <circle cx="128" cy="170" r="11" fill="{get_node_color(p['leftHip']['score'])}" stroke="#ffffff" stroke-width="2"/>
+              <text x="128" y="174" text-anchor="middle" fill="#ffffff" font-size="10" font-weight="bold">{p['leftHip']['score']}</text>
+
+              <circle cx="94" cy="228" r="11" fill="{get_node_color(p['rightKnee']['score'])}" stroke="#ffffff" stroke-width="2"/>
+              <text x="94" y="232" text-anchor="middle" fill="#ffffff" font-size="10" font-weight="bold">{p['rightKnee']['score']}</text>
+            </svg>
+            <div style="font-size:11px;color:#64748b;text-align:center;margin-top:2px;">
+              좌고관절({p['leftHip']['score']}) ↔ 우무릎({p['rightKnee']['score']})<br/>우손목({p['rightWrist']['score']}) ↔ 좌어깨({p['leftAnteriorShoulder']['score']})
+            </div>
+          </div>
+
+          <div class="parts-grid">
+            {cards_html}
+          </div>
+        </div>
+      </div>
+
+      <div class="main-card">
+        <div style="font-size:14px;font-weight:800;color:#0f172a;margin-bottom:8px;">📈 일자별 평균 통증 & 수면 만족도 추이 (최근 5일)</div>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          {trend_rows}
+        </div>
+      </div>
+    </body>
+    </html>
+    """
+    components.html(html_code, height=690, scrolling=True)
+
+
+def render_specialist_clinical_tab(current_log):
+    p = current_log["parts"]
+    s = current_log["sleep"]
+    workouts = current_log.get("workoutList", [])
+    done_cnt = sum(1 for w in workouts if w.get("done"))
+    total_cnt = len(workouts)
+
+    sorted_parts = sorted(
+        [{"name": m["name"], "score": p[m["key"]]["score"], "note": p[m["key"]]["note"]} for m in PART_META],
+        key=lambda x: x["score"],
+        reverse=True,
+    )
+    worst = sorted_parts[0]
+
+    clinical_html = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8" />
+      <style>
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+        body {{
+          font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+          margin: 0;
+          padding: 2px;
+          color: #1e293b;
+          background: transparent;
+        }}
+        .hero-banner {{
+          background: linear-gradient(135deg, #134e4a 0%, #0f172a 100%);
+          color: #ffffff;
+          padding: 20px;
+          border-radius: 16px;
+          margin-bottom: 14px;
+          box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        }}
+        .step-card {{
+          background: #ffffff;
+          border: 1px solid #e2e8f0;
+          border-radius: 14px;
+          padding: 16px 18px;
+          margin-bottom: 12px;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+        }}
+        .step-header {{
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          border-bottom: 1px solid #f1f5f9;
+          padding-bottom: 10px;
+          margin-bottom: 10px;
+        }}
+        .step-title {{
+          font-size: 15px;
+          font-weight: 800;
+          color: #0f766e;
+        }}
+        .step-badge {{
+          font-size: 11px;
+          font-weight: 700;
+          padding: 3px 10px;
+          border-radius: 999px;
+          background: #f0fdfa;
+          color: #0f766e;
+          border: 1px solid #99f6e4;
+        }}
+        .step-body {{
+          font-size: 13.5px;
+          line-height: 1.68;
+          color: #334155;
+        }}
+        .step-body ul {{
+          margin: 8px 0 0 0;
+          padding-left: 18px;
+        }}
+        .step-body li {{
+          margin-bottom: 7px;
+        }}
+      </style>
+    </head>
+    <body>
+      <div class="hero-banner">
+        <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:8px;">
+          <span style="background:#fbbf24;color:#0f172a;font-size:11px;font-weight:800;padding:3px 10px;border-radius:999px;">50년 임상 · 세계 1위 권위자</span>
+          <span style="font-size:12px;color:#99f6e4;font-weight:600;">가정의학과 · 정형외과 · 신경외과 전문의 / 물리·도수치료학 박사 황원택</span>
+        </div>
+        <div style="font-size:17px;font-weight:800;margin-bottom:6px;">🩺 황원택 원장의 4단 융합 임상 진료실 ({current_log['date']} 맞춤 처방)</div>
+        <div style="font-size:13px;color:#e2e8f0;line-height:1.6;">
+          "안녕하세요. 50년 동안 수많은 환자분들의 아픔을 다정하게 살피고 완치의 길을 열어온 황원택 원장이에요. 우리 환자분, <strong>만 31세에 189cm, 93kg</strong>이라는 듬직한 체격으로 장시간 좌식 근무를 견디시느라 몸이 많이 고단하셨지요? 단순히 교과서적인 이론에만 가두지 않고, 초음파·신경치료·도수치료를 융합해 수많은 난치성 통증을 완치시켰던 실전 노하우를 오늘 기록하신 수치에 맞춰 차분히 풀어드릴게요."
+        </div>
+      </div>
+
+      <!-- 1. 공감 및 문진 -->
+      <div class="step-card">
+        <div class="step-header">
+          <span class="step-title">1. 공감 및 문진 (Empathy & Clinical Inquiry)</span>
+          <span class="step-badge">다정한 맞춤 문진</span>
+        </div>
+        <div class="step-body">
+          189cm의 큰 키와 93kg의 체격은 일반적인 사무실 책상·의자 규격보다 지렛대 길이가 길어, 앉아 계실 때 요추와 골반이 감당해야 하는 물리적 압박이 남들보다 1.5배 이상 크답니다. 오늘 기록을 보니 <strong>{worst['name']}({worst['score']}점 · {worst['note']})</strong> 증상이 가장 신경 쓰이셨을 텐데, 개인 운동을 <strong>{total_cnt}개 중 {done_cnt}개</strong>나 성실히 해내신 점이 정말 대견해요. 보다 정밀한 치료 방향 설정을 위해 몇 가지만 먼저 여쭤볼게요.
+          <ul>
+            <li><strong>수면 중 허리(요추) 및 기상 컨디션 ({s['posture']} / 수면 {s['score']}점):</strong> 아침에 눈을 뜨셨을 때({current_log.get('patientWorkoutNote') or '기상 직후'}) 허리 뻐근함 때문에 잠에서 깨어나신 건가요, 아니면 뒤척이는 순간 골반 위쪽이 찌릿하셨나요?</li>
+            <li><strong>고관절 회전과 무릎의 연계 반응:</strong> <strong>왼쪽 고관절({p['leftHip']['score']}점 · {p['leftHip']['note']})</strong>이 크게 돌아갈 때 사타구니 안쪽에서 걸리는 느낌이나 '뚝' 소리가 나면서, 스쿼트 시 <strong>오른쪽 무릎({p['rightKnee']['score']}점)</strong>으로 체중이 쏠리진 않으시나요?</li>
+            <li><strong>측면 지지 및 상체 기울기:</strong> <strong>왼쪽 전면 어깨({p['leftAnteriorShoulder']['score']}점 · {p['leftAnteriorShoulder']['note']})</strong>의 불편감이 사이드 버티기 운동을 할 때나 책상에서 왼쪽 팔걸이에 기대어 앉을 때 더 뚜렷해지나요?</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- 2. 원인 분석 -->
+      <div class="step-card">
+        <div class="step-header">
+          <span class="step-title">2. 원인 분석 (교과서적 관점 + 50년 실전 임상 통합 분석)</span>
+          <span class="step-badge">전신 근막·신경 사슬</span>
+        </div>
+        <div class="step-body">
+          여섯 부위의 통증이 따로따로 나타나는 것처럼 보이지만, 제 50년 임상 눈으로 보면 이는 <strong>'장시간 좌식으로 인한 전신 나선형(Spiral) 교차 보상 증후군'</strong>이라는 하나의 밧줄로 엮여 있어요.
+          <ul>
+            <li><strong>① 좌측 고관절({p['leftHip']['score']}점) ↔ 허리 요추({p['lumbar']['score']}점) ↔ 우측 무릎({p['rightKnee']['score']}점)의 삼각 사슬:</strong> 우리 몸을 텐트에 비유해 볼게요. 오래 앉아 있으면 요추 뼈에서 골반 앞쪽을 지나 허벅지 안쪽으로 붙는 굵은 밧줄인 <strong>'장요근(Iliopsoas)'</strong>이 짧게 줄어듭니다. 밤에 누워 다리를 펴거나 뒤척일 때 이 짧아진 왼쪽 장요근이 요추를 앞·아래로 강하게 잡아당기니 수면 중 허리가 불편하고 아침 강직이 남는 거예요. 게다가 왼쪽 고관절 앞쪽 관절낭이 팽팽해져 회전 공간이 좁아지니 <strong>고관절이 심하게 회전될 때 집힘(FAI 유사 자극)</strong>이 생기고, 스쿼트를 할 때는 잠긴 왼쪽 고관절 대신 반대편 기둥인 <strong>오른쪽 무릎</strong>이 93kg의 하중을 대신 받으며 통증이 나타나는 거랍니다.</li>
+            <li><strong>② 일자목({p['cervical']['score']}점) ↔ 좌측 전면 어깨({p['leftAnteriorShoulder']['score']}점) ↔ 우측 손목({p['rightWrist']['score']}점)의 신경·근막 사슬:</strong> 큰 키에 비해 모니터를 내려다보면 고개가 앞으로 빠지며(일자목) 목 옆 근육인 <strong>사각근</strong>이 팔로 내려가는 신경 다발(완신경총)을 누릅니다. 동시에 몸이 왼쪽으로 기울거나 사이드 플랭크로 버틸 때 날개뼈를 갈비뼈에 밀착시키는 <strong>전거근(Serratus Anterior)</strong>이 피로해지면, 위팔뼈 머리가 앞쪽으로 밀려나며 <strong>왼쪽 전면 어깨 힘줄</strong>을 찌르게 됩니다.</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- 3. 대처 방안 -->
+      <div class="step-card">
+        <div class="step-header">
+          <span class="step-title">3. 대처 방안 (안전한 홈케어 · 권장 진료과 · 50년 완치 비법)</span>
+          <span class="step-badge">초음파·신경·도수 융합</span>
+        </div>
+        <div class="step-body">
+          단순히 아픈 곳에만 파스를 붙이는 것은 하류에서 흙탕물만 퍼내는 것과 같아요. 실제 완치 사례에서 가장 효과가 뛰어났던 <strong>3단계 융합 해법</strong>을 알려드릴게요.
+          <ul>
+            <li><strong>집에서 바로 하는 아침·야간 응급조치:</strong> 주무실 때 <strong>무릎 오금 아래에 조금 높은 베개</strong>를 받쳐 장요근의 팽팽한 장력을 풀어주세요. 특히 일요일처럼 아침 일찍 잠이 깨어 허리가 뻐근한 날에는 바로 일어나지 마시고, 누운 채로 양 무릎을 세워 좌우로 살살 흔들어주는 <strong>침대 위 윈드실드 와이퍼(2분)</strong>로 요추 후관절에 윤활액을 먼저 공급해 주세요.</li>
+            <li><strong>권장 진료과 및 정밀 융합 치료 안내:</strong> 특정 동작 통증이 지속될 때는 <strong>정형외과·신경외과·재활의학과</strong>를 방문하셔서 고해상도 <strong>초음파 진단(Ultrasound)</strong>을 받아보시는 것이 좋아요. 고관절 회전 시 집히는 장요근 건 주변과 왼쪽 앞어깨(상완이두근 장두건)의 미세 염증을 초음파로 직접 보면서, 유착된 신경과 근막을 생리식염수로 안전하게 분리하는 <strong>초음파 유도하 신경·근막 수액박리술(Hydrodissection)</strong>과 <strong>도수치료</strong>를 병행하면 회복이 놀라울 만큼 빨라집니다.</li>
+            <li><strong>황원택 원장의 '틀을 깨는' 50년 실전 비법:</strong>
+              <br/>• <strong>사이드로 누워 팔로 바닥 버티기(의자 다리 올리기) 하실 때:</strong> 왼쪽 어깨에 체중을 매달지 마시고, 바닥을 짚은 <strong>왼쪽 팔꿈치로 매트를 강하게 밀어내어 겨드랑이 아래 근육(전거근)을 천장 쪽으로 채워주세요.</strong> 날개뼈가 단단히 고정되면 왼쪽으로 몸이 기울 때 생기던 앞어깨 통증이 즉시 사라집니다.
+              <br/>• <strong>다리 한쪽 올려 옆으로 돌리기 하실 때:</strong> 고관절에서 소리가 나거나 집히지 않도록 <strong>기존 원 크기의 60% 정도만 작은 원</strong>으로 부드럽게 돌리시고, 운동 전 <strong>왼쪽 배꼽 옆 깊은 곳(장요근)과 왼쪽 엉덩이 바깥쪽(중둔근)</strong>을 마사지볼로 먼저 풀어주시면 스쿼트 시 오른쪽 무릎 부담까지 한 번에 해결됩니다.</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- 4. 생활 수칙 -->
+      <div class="step-card">
+        <div class="step-header">
+          <span class="step-title">4. 생활 수칙 (재발 방지를 위한 맞춤형 운동법 및 식습관)</span>
+          <span class="step-badge">맞춤 운동 & 영양</span>
+        </div>
+        <div class="step-body">
+          93kg의 탄탄한 근육과 체격을 평생 통증 없는 든든한 갑옷으로 만들려면 일상의 운동 순서와 식습관을 함께 챙기셔야 해요.
+          <ul>
+            <li><strong>개인 운동 5종 루틴의 황금 배치와 좌식 리셋:</strong> 지금 훌륭하게 수행 중이신 5가지 운동 중 <strong>① 무릎 꿇고 골반 하늘로 올리기(장요근 신전·둔근 수축)</strong>를 가장 먼저 실시해 골반 앞쪽을 열어주시고, <strong>② 16kg 어깨 슈러그</strong>를 하실 때는 고개가 앞으로 빠지지 않게 <strong>턱을 살짝 당긴(Chin-in) 상태</strong>에서 수행해 일자목 긴장을 예방하세요. 주중 근무 시에는 <strong>50분 좌식 후 3분 기립 스트레칭</strong> 원칙을 꼭 지켜주세요.</li>
+            <li><strong>깊은 수면과 디스크·근막 회복을 돕는 맞춤 식습관:</strong> 척추 디스크(추간판) 수핵과 근막은 수분이 부족하면 스펀지가 마르듯 탄력을 잃어 아침 강직이 심해집니다. 기상 직후 <strong>미온수 한 잔(300ml)</strong>을 포함해 하루 <strong>2L 이상의 수분</strong>을 섭취해 주세요. 또한 일요일 조기 각성을 줄이고 야간 근육 경직과 신경 미세 염증을 가라앉히기 위해, 저녁 식사에 <strong>오메가-3가 풍부한 등푸른생선(고등어·연어)</strong>과 천연 근육·신경 이완제 역할을 하는 <strong>마그네슘·트립토판이 풍부한 식단(구운 아몬드, 호박씨, 시금치, 바나나, 두부)</strong>을 곁들이시면 수면 만족도가 5점으로 올라가며 아침 허리가 한결 가벼워질 거예요.</li>
+          </ul>
+        </div>
+      </div>
+    </body>
+    </html>
+    """
+    components.html(clinical_html, height=1120, scrolling=True)
 
 
 db = load_shared_db()
@@ -128,7 +592,7 @@ if "editing_workout_id" not in st.session_state:
     st.session_state.editing_workout_id = None
 
 # --- HEADER & PERMISSION BAR ---
-st.markdown("### 🩺 매일 튼튼 재활 일지 & 통합 임상 케어 (실시간 공유 서버)")
+st.markdown("### 🩺 매일 튼튼 재활 일지 & 황원택 원장 통합 임상 케어")
 st.caption("환자 프로필: 만 31세 남성 · 189cm · 93kg · 장시간 좌식 근무 | 실시간 동기화 지원")
 
 col_role, col_pin = st.columns([3, 2])
@@ -184,36 +648,23 @@ with d_col2:
             save_shared_db(db)
             st.rerun()
 
-current_log = next((l for l in db["logs"] if l["date"] == db["selectedDate"]), db["logs"][-1])
+current_idx = next((i for i, l in enumerate(db["logs"]) if l["date"] == db["selectedDate"]), len(db["logs"]) - 1)
+current_log = db["logs"][current_idx]
+prev_log = db["logs"][current_idx - 1] if current_idx > 0 else None
 is_owner = st.session_state.is_owner
 
 # --- MAIN TABS ---
 tab1, tab2, tab3, tab4 = st.tabs([
-    "📊 종합 요약",
+    "📊 종합 요약 (바디맵)",
     f"✍️ 일지 기록 {'🔓' if is_owner else '🔒'}",
     "💬 원장님 소견 (OPEN)",
-    "🩺 50년 임상 처방 (참조)",
+    "🩺 50년 임상 처방 (황원택 원장)",
 ])
 
 with tab1:
-    scores = [current_log["parts"][m["key"]]["score"] for m in PART_META]
-    avg_pain = round(sum(scores) / len(scores), 1)
+    render_visual_body_dashboard(current_log, prev_log, db["logs"])
+
     workouts = current_log.get("workoutList", [])
-    done_cnt = sum(1 for w in workouts if w.get("done"))
-
-    m1, m2, m3 = st.columns(3)
-    m1.metric("선택일 평균 통증 (VAS)", f"{avg_pain} / 10점")
-    m2.metric("수면 만족도", "★" * current_log["sleep"]["score"] + f" ({current_log['sleep']['score']}/5)")
-    m3.metric("좌식 시간 / 개인 운동", f"{current_log['sleep']['sittingHours']}시간", f"운동 {done_cnt}/{len(workouts)} 완료")
-
-    st.markdown("#### 6대 집중 관리 부위 현황")
-    p_cols = st.columns(2)
-    for idx, m in enumerate(PART_META):
-        p_data = current_log["parts"][m["key"]]
-        note_text = p_data["note"] or m["desc"]
-        with p_cols[idx % 2]:
-            st.info(f"**{m['name']}**: VAS **{p_data['score']}점**  \n- {note_text}")
-
     st.markdown("#### 🏋️ 오늘 수행한 개인 운동 요약")
     if not workouts:
         st.caption("등록된 개인 운동이 없습니다.")
@@ -280,7 +731,6 @@ with tab2:
     st.markdown("#### 🏋️ 오늘 수행한 개인 운동 및 컨디션 메모 (본인 작성)")
     st.caption("운동을 한 개씩 추가·수정·삭제하고 완료 체크(✓)로 관리하세요. 수정 즉시 서버에 반영됩니다.")
 
-    # 운동 1개 추가 바
     add_c1, add_c2 = st.columns([4, 1])
     with add_c1:
         new_workout_txt = st.text_input(
@@ -301,7 +751,6 @@ with tab2:
                 save_shared_db(db)
                 st.rerun()
 
-    # 개별 운동 리스트 (체크 / 수정 / 삭제)
     for idx, w in enumerate(list(current_log.get("workoutList", []))):
         wid = w["id"]
         if st.session_state.editing_workout_id == wid and is_owner:
@@ -342,7 +791,6 @@ with tab2:
                     save_shared_db(db)
                     st.rerun()
 
-    # 컨디션 메모
     new_cond_note = st.text_area(
         "📝 오늘의 컨디션 및 특이사항 메모",
         value=current_log.get("patientWorkoutNote", ""),
@@ -409,10 +857,4 @@ with tab3:
     st.code(share_txt, language="markdown")
 
 with tab4:
-    st.markdown("#### 🩺 50년 임상 권위자 황원택 원장의 4단 융합 임상 처방전 (참조용)")
-    st.markdown(
-        "- **1단계 · 공감 및 맞춤 문진:** 189cm, 93kg의 건장한 체격으로 장시간 좌식 근무를 하시느라 척추와 관절의 지렛대 하중이 매우 큰 상태입니다. 수면 중 다리를 쭉 펴실 때 요추가 들뜨는지, 기립 시 왼쪽 고관절이 뻣뻣해 오른쪽 무릎에 체중을 싣는지 확인해 보세요.\n"
-        "- **2단계 · 원인 분석 (전신 나선형 교차 보상 증후군):** 좌식으로 인해 단축된 **왼쪽 장요근**이 수면 시 요추를 잡아당겨 야간 허리 불편감을 만들고, 보행 시 충격이 반대편 **오른쪽 무릎**으로 쏠립니다. 상체에서는 낮은 모니터로 인한 **일자목(사각근 긴장)**이 팔 신경을 압박해 **오른쪽 손목**과 **왼쪽 전면 어깨(소흉근 단축)**의 비대칭 통증을 유발합니다.\n"
-        "- **3단계 · 대처 방안:** 취침 시 무릎 오금 아래에 높은 베개를 받쳐 장요근 긴장을 즉시 완화하세요. 오른쪽 손목 통증 시 상류 신경 통로인 오른쪽 목 옆(사각근)·겨드랑이를 먼저 풀어주고, 오른쪽 무릎 통증 시 반대쪽 왼쪽 장요근·중둔근을 이완하는 것이 50년 실전 비법입니다.\n"
-        "- **4단계 · 생활 수칙:** 개인 운동 목록에 **런지 좌측 장요근 이완, 문틀 좌측 소흉근 스트레칭, 우측 정중신경 글라이딩**을 등록해 매일 체크하시고, 하루 2L 미온수 섭취와 오메가-3·마그네슘이 풍부한 식단을 병행하세요."
-    )
+    render_specialist_clinical_tab(current_log)
