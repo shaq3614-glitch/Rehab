@@ -12,15 +12,15 @@ st.set_page_config(
 )
 
 DB_FILE = "rehab_shared_data.json"
-SCHEMA_VERSION = "2026-11-16-v5"
+SCHEMA_VERSION = "2026-11-16-v6"
 
 PART_META = [
-    {"key": "lumbar", "name": "1. 허리 (요추 부위)", "side": "중앙 코어", "desc": "수면 시 불편감 및 좌식 디스크 하중"},
-    {"key": "leftHip", "name": "2. 왼쪽 고관절", "side": "좌측 하체", "desc": "장요근 단축 및 골반 전면 집임"},
-    {"key": "leftAnteriorShoulder", "name": "3. 왼쪽 전면 어깨", "side": "좌측 상체", "desc": "소흉근 단축 및 라운드 숄더"},
-    {"key": "rightWrist", "name": "4. 오른쪽 손목", "side": "우측 상체", "desc": "마우스 과사용 및 신경 포착 주의"},
-    {"key": "rightKnee", "name": "5. 오른쪽 무릎", "side": "우측 하체", "desc": "좌측 고관절 제한에 따른 대각선 과부하"},
-    {"key": "cervical", "name": "6. 목 (일자목)", "side": "상부 코어", "desc": "모니터 높이에 따른 경추 전만 소실"},
+    {"key": "lumbar", "name": "1. 허리 (요추 부위)", "short": "허리(요추)", "side": "중앙 코어", "color": "#ef4444", "desc": "수면 시 불편감 및 좌식 디스크 하중"},
+    {"key": "leftHip", "name": "2. 왼쪽 고관절", "short": "왼쪽 고관절", "side": "좌측 하체", "color": "#f97316", "desc": "장요근 단축 및 골반 전면 집임"},
+    {"key": "leftAnteriorShoulder", "name": "3. 왼쪽 전면 어깨", "short": "왼쪽 전면 어깨", "side": "좌측 상체", "color": "#eab308", "desc": "소흉근 단축 및 라운드 숄더"},
+    {"key": "rightWrist", "name": "4. 오른쪽 손목", "short": "오른쪽 손목", "side": "우측 상체", "color": "#10b981", "desc": "마우스 과사용 및 신경 포착 주의"},
+    {"key": "rightKnee", "name": "5. 오른쪽 무릎", "short": "오른쪽 무릎", "side": "우측 하체", "color": "#06b6d4", "desc": "좌측 고관절 제한에 따른 대각선 과부하"},
+    {"key": "cervical", "name": "6. 목 (일자목)", "short": "목(일자목)", "side": "상부 코어", "color": "#6366f1", "desc": "모니터 높이에 따른 경추 전만 소실"},
 ]
 
 CAPTURED_WORKOUTS = [
@@ -240,24 +240,10 @@ def render_visual_body_dashboard(current_log, prev_log, all_logs):
         </div>
         """
 
-    trend_rows = ""
-    for l in all_logs[-5:]:
-        l_scores = [l["parts"][m["key"]]["score"] for m in PART_META]
-        l_avg = round(sum(l_scores) / len(l_scores), 1)
-        bar_w = max(8, int(l_avg * 10))
-        is_sel = l["date"] == current_log["date"]
-        row_bg = "background:#f0fdfa;border:1px solid #99f6e4;" if is_sel else "background:#f8fafc;border:1px solid #f1f5f9;"
-        bar_col = get_node_color(l_avg)
-        trend_rows += f"""
-        <div style="display:flex;align-items:center;gap:10px;padding:6px 10px;border-radius:8px;{row_bg}">
-          <span style="width:52px;font-size:12px;font-weight:{'800' if is_sel else '600'};color:#0f172a;">{l['date'][5:]}</span>
-          <span style="width:68px;font-size:11px;color:#f59e0b;font-weight:700;">수면 ★{l['sleep']['score']}</span>
-          <div style="flex:1;height:10px;background:#e2e8f0;border-radius:999px;overflow:hidden;">
-            <div style="width:{bar_w}%;height:100%;background:{bar_col};border-radius:999px;"></div>
-          </div>
-          <span style="width:64px;text-align:right;font-size:12px;font-weight:800;color:#1e293b;">평균 {l_avg}점</span>
-        </div>
-        """
+    # Serialize logs & part meta for Interactive Multi-Line Chart & Milestone Timeline in JS
+    logs_json = json.dumps(all_logs, ensure_ascii=False)
+    meta_json = json.dumps(PART_META, ensure_ascii=False)
+    selected_date_str = current_log["date"]
 
     html_code = f"""
     <!DOCTYPE html>
@@ -314,9 +300,54 @@ def render_visual_body_dashboard(current_log, prev_log, all_logs):
         @media (max-width: 520px) {{
           .parts-grid {{ grid-template-columns: 1fr; }}
         }}
+        .filter-btn {{
+          padding: 5px 10px;
+          border-radius: 999px;
+          font-size: 11.5px;
+          font-weight: 700;
+          border: 1px solid #cbd5e1;
+          background: #f8fafc;
+          color: #475569;
+          cursor: pointer;
+          transition: all 0.15s;
+        }}
+        .filter-btn.active {{
+          background: #0f172a;
+          color: #ffffff;
+          border-color: #0f172a;
+        }}
+        .matrix-table {{
+          width: 100%;
+          border-collapse: collapse;
+          font-size: 12px;
+          margin-top: 10px;
+        }}
+        .matrix-table th, .matrix-table td {{
+          border: 1px solid #e2e8f0;
+          padding: 7px 6px;
+          text-align: center;
+        }}
+        .matrix-table th {{
+          background: #f1f5f9;
+          font-weight: 800;
+          color: #334155;
+        }}
+        .milestone-box {{
+          border-left: 3px solid #0d9488;
+          background: #f8fafc;
+          padding: 9px 12px;
+          border-radius: 0 10px 10px 0;
+          margin-bottom: 8px;
+          cursor: pointer;
+          transition: background 0.15s;
+        }}
+        .milestone-box:hover {{
+          background: #f0fdfa;
+        }}
       </style>
     </head>
     <body>
+      <!-- 1. Top 4 Summary Cards -->
       <div class="top-grid">
         <div class="metric-card">
           <div style="font-size:12px;color:#64748b;font-weight:600;">선택일 평균 통증 (VAS)</div>
@@ -351,6 +382,44 @@ def render_visual_body_dashboard(current_log, prev_log, all_logs):
         </div>
       </div>
 
+      <!-- 2. NEW: 날짜별 6대 부위 통증지수 추이 & 특이점(Milestone) 통합 분석 그래프 -->
+      <div class="main-card" style="border:1.5px solid #0d9488;">
+        <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;">
+          <div>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <span style="background:#0d9488;color:#fff;font-size:11px;font-weight:800;padding:2px 8px;border-radius:999px;">핵심 개선 추이</span>
+              <span style="font-size:15px;font-weight:800;color:#0f172a;">📉 날짜별 6대 부위 통증지수(VAS) 추이 & 특이점 그래프</span>
+            </div>
+            <div style="font-size:12px;color:#64748b;margin-top:3px;">
+              아래 부위 버튼을 클릭하면 해당 부위의 날짜별 통증 궤적과 동작 특이점을 단독 하이라이트합니다 · 그래프의 날짜 점을 클릭해 상세 특이점을 확인하세요.
+            </div>
+          </div>
+        </div>
+
+        <!-- Part Filter Buttons -->
+        <div id="partFilterBar" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;"></div>
+
+        <!-- Interactive SVG Line Chart Container -->
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:12px 10px 8px 10px;">
+          <svg id="multiLineSvg" viewBox="0 0 680 250" style="width:100%;height:auto;overflow:visible;"></svg>
+        </div>
+
+        <!-- Interactive Selected Date / Part Special Note (특이점) Callout Banner -->
+        <div id="chartPointDetailBox" style="margin-top:10px;padding:11px 14px;border-radius:12px;background:#f0fdfa;border:1px solid #99f6e4;font-size:12.5px;color:#134e4a;line-height:1.55;"></div>
+
+        <!-- Date x 6 Parts Heatmap Table + Net Improvement Summary -->
+        <div style="overflow-x:auto;margin-top:12px;">
+          <table class="matrix-table" id="painMatrixTable"></table>
+        </div>
+
+        <!-- Date-by-Date Key Milestones & Special Notes Timeline -->
+        <div style="margin-top:14px;">
+          <div style="font-size:13px;font-weight:800;color:#0f172a;margin-bottom:8px;">📌 날짜별 핵심 특이점 (수면 · 좌식 · 부위별 유발 동작 · 컨디션 타임라인)</div>
+          <div id="milestoneTimelineContainer"></div>
+        </div>
+      </div>
+
+      <!-- 3. 6대 집중 관리 부위 밸런스 맵 (SVG Body Heatmap) -->
       <div class="main-card">
         <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px;">
           <div>
@@ -411,16 +480,221 @@ def render_visual_body_dashboard(current_log, prev_log, all_logs):
         </div>
       </div>
 
-      <div class="main-card">
-        <div style="font-size:14px;font-weight:800;color:#0f172a;margin-bottom:8px;">📈 일자별 평균 통증 & 수면 만족도 추이 (최근 5일)</div>
-        <div style="display:flex;flex-direction:column;gap:6px;">
-          {trend_rows}
-        </div>
-      </div>
+      <script>
+        const ALL_LOGS = {logs_json};
+        const PART_META = {meta_json};
+        let selectedPartFilter = 'ALL'; // 'ALL' or part.key
+        let focusedDateIdx = ALL_LOGS.findIndex(l => l.date === '{selected_date_str}');
+        if (focusedDateIdx < 0) focusedDateIdx = ALL_LOGS.length - 1;
+
+        function getCellStyle(sc) {{
+          if (sc <= 3) return 'background:#dcfce7;color:#166534;font-weight:800;';
+          if (sc <= 6) return 'background:#fef3c7;color:#92400e;font-weight:800;';
+          return 'background:#fee2e2;color:#991b1b;font-weight:800;';
+        }}
+
+        function summarizeSpecialMilestone(log, idx) {{
+          const p = log.parts;
+          const s = log.sleep;
+          const avg = (PART_META.reduce((acc, m) => acc + p[m.key].score, 0) / PART_META.length).toFixed(1);
+          const zeroParts = PART_META.filter(m => p[m.key].score === 0).map(m => m.short);
+          const highParts = PART_META.filter(m => p[m.key].score >= 5).map(m => `${{m.short}}(${{p[m.key].score}})`);
+
+          let tag = '';
+          if (idx === 0) tag = '🚨 초기 급성기 기준점';
+          else if (zeroParts.length > 0 && s.score >= 4) tag = `✨ ${{zeroParts.join('·')}} 통증 0점 소실 & 최저치 달성`;
+          else if (s.sittingHours === 0 && s.score <= 3) tag = '⚠️ 휴일 조기 각성(수면 부족)에 따른 아침 강직 반응';
+          else if (avg <= 2.5) tag = '🌿 5대 재활 루틴 정착 및 안정화 진입';
+          else tag = '📉 베개·모니터 교정 후 통증 하향세';
+
+          return {{
+            avg,
+            tag,
+            condNote: log.patientWorkoutNote || '-',
+            sleepInfo: `수면 ★${{s.score}}점 (${{s.posture}}) · 좌식 ${{s.sittingHours}}h`,
+            partNotes: PART_META.map(m => `<strong>${{m.short}}(${{p[m.key].score}}점):</strong> ${{p[m.key].note || '-'}}`).join(' | ')
+          }};
+        }}
+
+        function setPartFilter(key) {{
+          selectedPartFilter = key;
+          renderTrendSection();
+        }}
+
+        function setFocusedDate(idx) {{
+          focusedDateIdx = idx;
+          renderTrendSection();
+        }}
+
+        function renderTrendSection() {{
+          // 1. Render Filter Bar
+          const filterBar = document.getElementById('partFilterBar');
+          let btnsHtml = `<button class="filter-btn ${{selectedPartFilter === 'ALL' ? 'active' : ''}}" onclick="setPartFilter('ALL')">📊 6대 부위 전체 추이</button>`;
+          PART_META.forEach(m => {{
+            const isAct = selectedPartFilter === m.key;
+            const style = isAct
+              ? `background:${{m.color}};color:#fff;border-color:${{m.color}};`
+              : `border-left:4px solid ${{m.color}};`;
+            btnsHtml += `<button class="filter-btn" style="${{style}}" onclick="setPartFilter('${{m.key}}')">${{m.short}}</button>`;
+          }});
+          filterBar.innerHTML = btnsHtml;
+
+          // 2. Render SVG Multi-Line Chart + Special Event Markers
+          const svg = document.getElementById('multiLineSvg');
+          const W = 680, H = 250;
+          const padL = 42, padR = 28, padT = 26, padB = 42;
+          const plotW = W - padL - padR;
+          const plotH = H - padT - padB;
+          const n = ALL_LOGS.length;
+
+          const xPos = (i) => n === 1 ? padL + plotW / 2 : padL + (i * plotW) / (n - 1);
+          const yPos = (val) => padT + plotH - (Math.min(10, Math.max(0, val)) / 10) * plotH;
+
+          let svgContent = '';
+
+          // Y-axis grid lines & labels (0, 2, 4, 6, 8, 10)
+          [0, 2, 4, 6, 8, 10].forEach(v => {{
+            const y = yPos(v);
+            const isSafeZone = v === 3;
+            svgContent += `<line x1="${{padL}}" y1="${{y}}" x2="${{W - padR}}" y2="${{y}}" stroke="${{v === 0 ? '#94a3b8' : '#e2e8f0'}}" stroke-width="1" stroke-dasharray="${{v === 0 ? '' : '3 3'}}"/>`;
+            svgContent += `<text x="${{padL - 8}}" y="${{y + 4}}" text-anchor="end" font-size="10" fill="#64748b" font-weight="600">${{v}}</text>`;
+          }});
+
+          // Highlight Focused Date Vertical Column
+          const fx = xPos(focusedDateIdx);
+          svgContent += `<line x1="${{fx}}" y1="${{padT - 8}}" x2="${{fx}}" y2="${{H - padB}}" stroke="#0d9488" stroke-width="1.5" stroke-dasharray="4 2"/>`;
+
+          // X-axis date labels + Milestone Pin Icons
+          ALL_LOGS.forEach((log, i) => {{
+            const x = xPos(i);
+            const isSel = i === focusedDateIdx;
+            const ms = summarizeSpecialMilestone(log, i);
+            svgContent += `
+              <g style="cursor:pointer;" onclick="setFocusedDate(${{i}})">
+                <rect x="${{x - 28}}" y="${{H - padB + 6}}" width="56" height="22" rx="6" fill="${{isSel ? '#0f766e' : '#f1f5f9'}}" />
+                <text x="${{x}}" y="${{H - padB + 21}}" text-anchor="middle" font-size="11" font-weight="800" fill="${{isSel ? '#ffffff' : '#334155'}}">${{log.date.slice(5)}}</text>
+                <text x="${{x}}" y="${{padT - 10}}" text-anchor="middle" font-size="10" font-weight="800" fill="${{isSel ? '#0f766e' : '#64748b'}}">📌평균 ${{ms.avg}}</text>
+              </g>
+            `;
+          }});
+
+          // Plot lines for each part
+          PART_META.forEach((m, mIdx) => {{
+            const isHighlighted = selectedPartFilter === 'ALL' || selectedPartFilter === m.key;
+            const opacity = isHighlighted ? '1' : '0.14';
+            const strokeW = selectedPartFilter === m.key ? '3.5' : '2.2';
+
+            // Slight vertical offset only when ALL is selected and points overlap
+            const offset = selectedPartFilter === 'ALL' ? (mIdx - 2.5) * 1.1 : 0;
+
+            const pts = ALL_LOGS.map((l, i) => `${{xPos(i)}},${{yPos(l.parts[m.key].score) + offset}}`).join(' ');
+            svgContent += `<polyline fill="none" stroke="${{m.color}}" stroke-width="${{strokeW}}" opacity="${{opacity}}" points="${{pts}}" stroke-linecap="round" stroke-linejoin="round"/>`;
+
+            ALL_LOGS.forEach((l, i) => {{
+              const sc = l.parts[m.key].score;
+              const cx = xPos(i);
+              const cy = yPos(sc) + offset;
+              const r = (selectedPartFilter === m.key || i === focusedDateIdx) ? 5.5 : 4;
+              svgContent += `
+                <g style="cursor:pointer;" opacity="${{opacity}}" onclick="setFocusedDate(${{i}})">
+                  <circle cx="${{cx}}" cy="${{cy}}" r="${{r}}" fill="${{m.color}}" stroke="#ffffff" stroke-width="1.5">
+                    <title>${{l.date}} ${{m.short}}: ${{sc}}점 (${{l.parts[m.key].note || '-'}})</title>
+                  </circle>
+                  ${{selectedPartFilter === m.key ? `<text x="${{cx}}" y="${{cy - 9}}" text-anchor="middle" font-size="11" font-weight="800" fill="${{m.color}}">${{sc}}점</text>` : ''}}
+                </g>
+              `;
+            }});
+          }});
+
+          svg.innerHTML = svgContent;
+
+          // 3. Render Selected Date / Part Special Note Banner
+          const fLog = ALL_LOGS[focusedDateIdx];
+          const fMs = summarizeSpecialMilestone(fLog, focusedDateIdx);
+          const detailBox = document.getElementById('chartPointDetailBox');
+
+          if (selectedPartFilter === 'ALL') {{
+            detailBox.innerHTML = `
+              <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px;margin-bottom:4px;">
+                <span style="font-weight:800;font-size:13px;color:#0f766e;">📌 [${{fLog.date}} 특이점 요약] ${{fMs.tag}} (평균 VAS ${{fMs.avg}}점)</span>
+                <span style="font-size:11.5px;font-weight:700;color:#475569;">${{fMs.sleepInfo}}</span>
+              </div>
+              <div style="margin-bottom:4px;"><strong>• 컨디션 특이점:</strong> ${{fMs.condNote}}</div>
+              <div style="font-size:11.5px;color:#334155;">• ${{fMs.partNotes}}</div>
+            `;
+          }} else {{
+            const pm = PART_META.find(m => m.key === selectedPartFilter);
+            const firstSc = ALL_LOGS[0].parts[pm.key].score;
+            const currSc = fLog.parts[pm.key].score;
+            const netDiff = currSc - firstSc;
+            const netTxt = netDiff < 0 ? `첫날 대비 ▼ ${{Math.abs(netDiff)}}점 개선` : (netDiff > 0 ? `첫날 대비 ▲ +${{netDiff}}점` : '첫날과 동일');
+            detailBox.innerHTML = `
+              <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px;margin-bottom:4px;">
+                <span style="font-weight:800;font-size:13.5px;color:${{pm.color}};">🎯 [${{pm.name}} 집중 추이] ${{fLog.date}} 기준 VAS ${{currSc}}점 (${{netTxt}})</span>
+                <span style="font-size:11.5px;font-weight:700;color:#475569;">${{fMs.sleepInfo}}</span>
+              </div>
+              <div><strong>• ${{fLog.date}} 부위 특이점 메모:</strong> ${{fLog.parts[pm.key].note || pm.desc}}</div>
+              <div style="margin-top:2px;"><strong>• 당일 컨디션 메모:</strong> ${{fMs.condNote}}</div>
+            `;
+          }}
+
+          // 4. Render Matrix Table (Date x Parts + Total Improvement)
+          const tbl = document.getElementById('painMatrixTable');
+          let ths = `<tr><th style="text-align:left;padding-left:10px;">부위명</th>`;
+          ALL_LOGS.forEach((l, i) => {{
+            const isSel = i === focusedDateIdx;
+            ths += `<th style="cursor:pointer;${{isSel ? 'background:#ccfbf1;color:#0f766e;' : ''}}" onclick="setFocusedDate(${{i}})">${{l.date.slice(5)}}</th>`;
+          }});
+          ths += `<th>첫날 대비 변화</th><th>주요 유발 동작 / 특이점</th></tr>`;
+
+          let trs = '';
+          PART_META.forEach(m => {{
+            const firstSc = ALL_LOGS[0].parts[m.key].score;
+            const latestSc = ALL_LOGS[ALL_LOGS.length - 1].parts[m.key].score;
+            const diff = latestSc - firstSc;
+            const diffBadge = diff < 0
+              ? `<span style="color:#0d9488;font-weight:800;">▼ ${{diff}}점 호전</span>`
+              : (diff > 0 ? `<span style="color:#e11d48;font-weight:800;">▲ +${{diff}}점</span>` : `<span style="color:#64748b;">유지</span>`);
+            const latestNote = ALL_LOGS[focusedDateIdx].parts[m.key].note || m.desc;
+
+            trs += `<tr onclick="setPartFilter('${{m.key}}')" style="cursor:pointer;">
+              <td style="text-align:left;padding-left:10px;font-weight:700;white-space:nowrap;">
+                <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${{m.color}};margin-right:5px;"></span>${{m.short}}
+              </td>`;
+            ALL_LOGS.forEach((l, i) => {{
+              const sc = l.parts[m.key].score;
+              trs += `<td style="${{getCellStyle(sc)}}">${{sc}}점</td>`;
+            }});
+            trs += `<td>${{diffBadge}}</td><td style="text-align:left;padding-left:8px;color:#475569;">${{latestNote}}</td></tr>`;
+          }});
+          tbl.innerHTML = ths + trs;
+
+          // 5. Render Milestone Timeline Cards
+          const tlContainer = document.getElementById('milestoneTimelineContainer');
+          tlContainer.innerHTML = ALL_LOGS.slice().reverse().map((l, revIdx) => {{
+            const origIdx = ALL_LOGS.length - 1 - revIdx;
+            const ms = summarizeSpecialMilestone(l, origIdx);
+            const isSel = origIdx === focusedDateIdx;
+            return `
+              <div class="milestone-box" style="${{isSel ? 'border-left-width:5px;background:#f0fdfa;' : ''}}" onclick="setFocusedDate(${{origIdx}})">
+                <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:4px;">
+                  <span style="font-size:12.5px;font-weight:800;color:#0f172a;">📅 ${{l.date}} — ${{ms.tag}}</span>
+                  <span style="font-size:11px;font-weight:700;color:#0f766e;">평균 통증 ${{ms.avg}}점 · ${{ms.sleepInfo}}</span>
+                </div>
+                <div style="font-size:12px;color:#334155;margin-top:3px;">
+                  <strong>특이점 메모:</strong> ${{ms.condNote}}
+                </div>
+              </div>
+            `;
+          }}).join('');
+        }}
+
+        renderTrendSection();
+      </script>
     </body>
     </html>
     """
-    components.html(html_code, height=690, scrolling=True)
+    components.html(html_code, height=1220, scrolling=True)
 
 
 def render_specialist_clinical_tab(current_log):
@@ -655,7 +929,7 @@ is_owner = st.session_state.is_owner
 
 # --- MAIN TABS ---
 tab1, tab2, tab3, tab4 = st.tabs([
-    "📊 종합 요약 (바디맵)",
+    "📊 종합 요약 (추이 그래프 & 바디맵)",
     f"✍️ 일지 기록 {'🔓' if is_owner else '🔒'}",
     "💬 원장님 소견 (OPEN)",
     "🩺 50년 임상 처방 (황원택 원장)",
