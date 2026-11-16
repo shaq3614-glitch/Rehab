@@ -143,7 +143,7 @@ with col_role:
 
 with col_pin:
     if not st.session_state.is_owner:
-        pin_input = st.text_input("🔒 본인 잠금 해제 PIN (기본 0208)", type="password", key="pin_box")
+        pin_input = st.text_input("🔒 본인 잠금 해제 PIN", type="password", key="pin_box")
         if st.button("본인 권한 잠금 해제", use_container_width=True):
             if pin_input == db.get("ownerPin", "0208"):
                 st.session_state.is_owner = True
@@ -229,7 +229,7 @@ with tab1:
 
 with tab2:
     if not is_owner:
-        st.info("🔒 일지 기록과 개인 운동 관리는 **환자 본인 권한(PIN 0208)**에서만 수정할 수 있습니다. 상단에서 잠금을 해제해 주세요.")
+        st.info("🔒 일지 기록과 개인 운동 관리는 **환자 본인 권한**에서만 수정할 수 있습니다. 상단에서 잠금을 해제해 주세요.")
 
     st.markdown("#### 🌙 수면 만족도 및 좌식 생활 기록")
     s_col1, s_col2, s_col3, s_col4 = st.columns([2, 3, 2, 2])
