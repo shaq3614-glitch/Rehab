@@ -11,19 +11,20 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-# 단일톤 파스텔(Pastel Sage-Blue) 테마 CSS
+# 트렌디한 멀티 파스텔(Soft Wellness / Notion 스타일) 전역 CSS
 st.markdown(
     """
     <style>
     @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
     html, body, [class*="css"] {
         font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-        color: #2c4249;
+        color: #2d3748;
+        background-color: #fafbfc;
     }
     .block-container {
-        padding-top: 1.6rem !important;
+        padding-top: 1.5rem !important;
         padding-bottom: 3rem !important;
-        max-width: 760px !important;
+        max-width: 780px !important;
     }
     </style>
     """,
@@ -31,16 +32,70 @@ st.markdown(
 )
 
 DB_FILE = "rehab_shared_data.json"
-SCHEMA_VERSION = "2026-11-18-v10-pastel"
+SCHEMA_VERSION = "2026-11-19-v11-trendy-pastel"
 
-# 단일톤 파스텔 세이지-블루 팔레트 (명도 차이와 선 스타일로 구분)
+# 6개 부위별 명확히 구분되는 트렌디 파스텔 팔레트 (코랄·피치·버터·민트·스카이·라벤더)
 PART_META = [
-    {"key": "lumbar", "name": "1. 허리 (요추)", "short": "허리", "side": "중앙 코어", "color": "#4f7c85", "dash": "", "desc": "수면 시 불편감 및 좌식 하중"},
-    {"key": "leftHip", "name": "2. 왼쪽 고관절", "short": "좌고관절", "side": "좌측 하체", "color": "#64929b", "dash": "", "desc": "장요근 단축 및 회전 시 집임"},
-    {"key": "leftAnteriorShoulder", "name": "3. 왼쪽 전면 어깨", "short": "좌어깨", "side": "좌측 상체", "color": "#7aa6af", "dash": "5 3", "desc": "측면 지지 및 기울 때 불편"},
-    {"key": "rightWrist", "name": "4. 오른쪽 손목", "short": "우손목", "side": "우측 상체", "color": "#8fb8c0", "dash": "3 3", "desc": "마우스 사용 및 땅 짚을 때"},
-    {"key": "rightKnee", "name": "5. 오른쪽 무릎", "short": "우무릎", "side": "우측 하체", "color": "#739fa8", "dash": "6 2", "desc": "스쿼트 시 대각선 보상 하중"},
-    {"key": "cervical", "name": "6. 목 (일자목)", "short": "목", "side": "상부 코어", "color": "#5a8790", "dash": "2 2", "desc": "컴퓨터 작업 시 경추 피로"},
+    {
+        "key": "lumbar",
+        "name": "1. 허리 (요추)",
+        "short": "허리",
+        "side": "중앙 코어",
+        "color": "#e58a8a",
+        "bg": "#fdf2f2",
+        "text": "#9b3b3b",
+        "desc": "수면 시 불편감 및 좌식 하중",
+    },
+    {
+        "key": "leftHip",
+        "name": "2. 왼쪽 고관절",
+        "short": "좌고관절",
+        "side": "좌측 하체",
+        "color": "#eba06a",
+        "bg": "#fef6ee",
+        "text": "#9a4e1c",
+        "desc": "장요근 단축 및 회전 시 집임",
+    },
+    {
+        "key": "leftAnteriorShoulder",
+        "name": "3. 왼쪽 전면 어깨",
+        "short": "좌어깨",
+        "side": "좌측 상체",
+        "color": "#d9b44a",
+        "bg": "#fdf9eb",
+        "text": "#856414",
+        "desc": "측면 지지 및 기울 때 불편",
+    },
+    {
+        "key": "rightWrist",
+        "name": "4. 오른쪽 손목",
+        "short": "우손목",
+        "side": "우측 상체",
+        "color": "#67b89a",
+        "bg": "#effaf5",
+        "text": "#246b52",
+        "desc": "마우스 사용 및 땅 짚을 때",
+    },
+    {
+        "key": "rightKnee",
+        "name": "5. 오른쪽 무릎",
+        "short": "우무릎",
+        "side": "우측 하체",
+        "color": "#6ea8dc",
+        "bg": "#f0f7fe",
+        "text": "#245b8f",
+        "desc": "스쿼트 시 대각선 보상 하중",
+    },
+    {
+        "key": "cervical",
+        "name": "6. 목 (일자목)",
+        "short": "목",
+        "side": "상부 코어",
+        "color": "#9b89d9",
+        "bg": "#f5f2fd",
+        "text": "#513d96",
+        "desc": "컴퓨터 작업 시 경추 피로",
+    },
 ]
 
 WORKOUTS_1113 = [
@@ -197,7 +252,15 @@ def save_db(data):
         json.dump(data, f, ensure_ascii=False, indent=2)
 
 
-def render_pastel_first_page(current_log, all_logs):
+def get_rpe_pastel_pill(rpe_val):
+    if rpe_val <= 5:
+        return "background:#eef6ff;color:#356399;border:1px solid #d4e6fb;"
+    if rpe_val <= 7:
+        return "background:#eef9f4;color:#2c7058;border:1px solid #ccebdc;"
+    return "background:#fef5ec;color:#a15826;border:1px solid #f7dec4;"
+
+
+def render_trendy_pastel_first_page(current_log, all_logs):
     workouts = current_log.get("workoutList", [])
     done_cnt = sum(1 for w in workouts if w.get("done"))
     total_cnt = len(workouts)
@@ -205,24 +268,31 @@ def render_pastel_first_page(current_log, all_logs):
 
     workout_rows = ""
     if not workouts:
-        workout_rows = "<div style='padding:14px;text-align:center;color:#769299;font-size:13px;'>등록된 운동이 없습니다.</div>"
+        workout_rows = "<div style='padding:14px;text-align:center;color:#718096;font-size:13px;'>등록된 운동이 없습니다.</div>"
     else:
         for idx, w in enumerate(workouts):
-            mark = "✓" if w.get("done") else "-"
+            is_done = bool(w.get("done"))
             rpe_v = int(w.get("rpe", 7))
             dur = w.get("duration") or "-"
             feel = w.get("feeling") or "기록된 주관적 느낌 없음"
+            check_dot = (
+                "<span style='display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:6px;background:#67b89a;color:#fff;font-size:11px;font-weight:800;margin-right:7px;'>✓</span>"
+                if is_done
+                else "<span style='display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:6px;background:#edf2f7;color:#a0aec0;font-size:11px;margin-right:7px;'>-</span>"
+            )
             workout_rows += f"""
-            <div style="border:1px solid #d7e7ea;background:#ffffff;border-radius:10px;padding:11px 14px;margin-bottom:8px;">
+            <div style="border:1px solid #e6ebf2;background:#ffffff;border-radius:12px;padding:12px 15px;margin-bottom:9px;box-shadow:0 1px 2px rgba(15,23,42,0.02);">
               <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px;">
-                <span style="font-size:13.5px;font-weight:700;color:#2c4249;">[{mark}] {idx + 1}. {w['text']}</span>
+                <div style="display:flex;align-items:center;font-size:13.5px;font-weight:700;color:#1e293b;">
+                  {check_dot}<span>{idx + 1}. {w['text']}</span>
+                </div>
                 <div style="display:flex;gap:6px;">
-                  <span style="font-size:11.5px;font-weight:600;padding:2px 8px;border-radius:6px;background:#f2f8f9;color:#4f7c85;border:1px solid #d7e7ea;">유지/수행: {dur}</span>
-                  <span style="font-size:11.5px;font-weight:700;padding:2px 8px;border-radius:6px;background:#e3f0f2;color:#3d656d;">RPE {rpe_v}/10</span>
+                  <span style="font-size:11.5px;font-weight:600;padding:2px 9px;border-radius:999px;background:#f4f2fc;color:#5a4a9c;border:1px solid #e2dcf8;">⏱️ {dur}</span>
+                  <span style="font-size:11.5px;font-weight:700;padding:2px 9px;border-radius:999px;{get_rpe_pastel_pill(rpe_v)}">RPE {rpe_v}/10</span>
                 </div>
               </div>
-              <div style="margin-top:6px;padding:7px 10px;background:#f7fbfc;border-left:3px solid #8fb8c0;border-radius:0 6px 6px 0;font-size:12.5px;color:#3d555c;line-height:1.45;">
-                <strong style="color:#4f7c85;">느낌:</strong> {feel}
+              <div style="margin-top:7px;padding:7px 11px;background:#f8fafc;border-left:3px solid #9b89d9;border-radius:0 8px 8px 0;font-size:12.5px;color:#334155;line-height:1.48;">
+                <strong style="color:#5a4a9c;">느낌:</strong> {feel}
               </div>
             </div>
             """
@@ -243,90 +313,125 @@ def render_pastel_first_page(current_log, all_logs):
           margin: 0;
           padding: 2px;
           background: transparent;
-          color: #2c4249;
+          color: #2d3748;
         }}
-        .pastel-card {{
-          background: #f7fbfc;
-          border: 1px solid #d7e7ea;
-          border-radius: 14px;
-          padding: 15px;
+        .section-card {{
+          background: #ffffff;
+          border: 1px solid #e6ebf2;
+          border-radius: 16px;
+          padding: 16px;
           margin-bottom: 14px;
+          box-shadow: 0 2px 8px rgba(15, 23, 42, 0.03);
+        }}
+        .workout-surface {{
+          background: linear-gradient(180deg, #faf9ff 0%, #ffffff 100%);
+          border: 1px solid #e3def7;
         }}
         .filter-btn {{
-          padding: 4px 10px;
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+          padding: 5px 11px;
           border-radius: 999px;
           font-size: 11.5px;
           font-weight: 600;
-          border: 1px solid #cbe0e4;
+          border: 1px solid #e2e8f0;
           background: #ffffff;
-          color: #52757c;
+          color: #4a5568;
           cursor: pointer;
-          transition: all 0.15s;
+          transition: all 0.16s ease;
         }}
-        .filter-btn.active {{
-          background: #5b8a92;
+        .filter-btn:hover {{
+          background: #f8fafc;
+        }}
+        .filter-btn.active-all {{
+          background: #3b4963;
           color: #ffffff;
-          border-color: #5b8a92;
+          border-color: #3b4963;
           font-weight: 700;
+        }}
+        .color-dot {{
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          display: inline-block;
         }}
         .matrix-table {{
           width: 100%;
-          border-collapse: collapse;
+          border-collapse: separate;
+          border-spacing: 0;
           font-size: 11.5px;
-          margin-top: 10px;
-          background: #ffffff;
+          margin-top: 12px;
+          border: 1px solid #e6ebf2;
+          border-radius: 10px;
+          overflow: hidden;
         }}
         .matrix-table th, .matrix-table td {{
-          border: 1px solid #dcebef;
+          border-bottom: 1px solid #edf2f7;
+          border-right: 1px solid #edf2f7;
           padding: 6px 5px;
           text-align: center;
-          color: #365057;
+          color: #334155;
+        }}
+        .matrix-table th:last-child, .matrix-table td:last-child {{
+          border-right: none;
+        }}
+        .matrix-table tr:last-child td {{
+          border-bottom: none;
         }}
         .matrix-table th {{
-          background: #edf6f8;
+          background: #f8fafc;
           font-weight: 700;
-          color: #2c4249;
+          color: #475569;
         }}
       </style>
     </head>
     <body>
-      <!-- 1. 오늘 수행한 개인 운동 요약 (최상단 배치) -->
-      <div class="pastel-card">
-        <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:6px;margin-bottom:10px;">
-          <span style="font-size:15px;font-weight:800;color:#2c4249;">오늘 수행한 개인 운동 요약 ({current_log['date']})</span>
-          <span style="font-size:12px;font-weight:700;color:#4f7c85;background:#e3f0f2;padding:3px 10px;border-radius:999px;">
+      <!-- 1. 오늘 수행한 개인 운동 요약 (최상단 배치 - 황인준 대표님 피드백 유지) -->
+      <div class="section-card workout-surface">
+        <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:6px;margin-bottom:11px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="font-size:15px;font-weight:800;color:#1e293b;">오늘 수행한 개인 운동 요약</span>
+            <span style="font-size:11.5px;font-weight:700;color:#5a4a9c;background:#f0ecfe;padding:2px 9px;border-radius:999px;">{current_log['date']}</span>
+          </div>
+          <span style="font-size:11.5px;font-weight:700;color:#2c7058;background:#eef9f4;border:1px solid #ccebdc;padding:3px 10px;border-radius:999px;">
             완료 {done_cnt}/{total_cnt} · 평균 RPE {avg_rpe}
           </span>
         </div>
+
         {workout_rows}
-        <div style="margin-top:8px;padding:8px 11px;background:#ffffff;border:1px solid #d7e7ea;border-radius:8px;font-size:12px;color:#476269;">
-          <strong>컨디션 메모:</strong> {current_log.get('patientWorkoutNote') or '-'}
+
+        <div style="margin-top:8px;padding:9px 12px;background:#fffbf2;border:1px solid #f3e5c8;border-radius:10px;font-size:12px;color:#745420;">
+          <strong>오늘 컨디션 메모:</strong> {current_log.get('patientWorkoutNote') or '-'}
         </div>
       </div>
 
-      <!-- 2. 원복된 VAS 추이 & 특이점 그래프 (단일톤 파스텔 세이지-블루 테마) -->
-      <div class="pastel-card" style="background:#ffffff;">
-        <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:6px;margin-bottom:8px;">
+      <!-- 2. 부위별 멀티 파스텔 VAS 통증 추이 & 특이점 그래프 (보조지표) -->
+      <div class="section-card">
+        <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:6px;margin-bottom:9px;">
           <div>
-            <span style="font-size:14.5px;font-weight:800;color:#2c4249;">날짜별 6대 부위 통증지수(VAS) 추이 & 특이점 그래프 (보조지표)</span>
-            <div style="font-size:11.5px;color:#6c8a91;margin-top:2px;">
-              부위 버튼을 누르면 해당 부위의 추이선과 특이점이 단독 강조됩니다 · 날짜를 클릭해 일자별 특이점을 확인하세요.
+            <span style="font-size:14.5px;font-weight:800;color:#1e293b;">날짜별 6대 부위 통증지수(VAS) 추이 & 특이점</span>
+            <span style="margin-left:6px;font-size:10.5px;font-weight:700;color:#64748b;background:#f1f5f9;padding:2px 7px;border-radius:999px;">보조지표</span>
+            <div style="font-size:11.5px;color:#718096;margin-top:3px;">
+              각 부위별 파스텔 컬러로 구분됩니다 · 부위 버튼이나 표의 부위명을 누르면 단독 강조됩니다.
             </div>
           </div>
         </div>
 
-        <div id="partFilterBar" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px;"></div>
+        <!-- 부위별 파스텔 필터 버튼 -->
+        <div id="partFilterBar" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;"></div>
 
-        <div style="background:#f7fbfc;border:1px solid #dcebef;border-radius:10px;padding:10px 8px 6px 8px;">
-          <svg id="pastelVasSvg" viewBox="0 0 660 225" style="width:100%;height:auto;overflow:visible;"></svg>
+        <!-- 인터랙티브 SVG 멀티 파스텔 라인 차트 -->
+        <div style="background:#fafbfd;border:1px solid #edf2f7;border-radius:12px;padding:12px 10px 6px 10px;">
+          <svg id="trendyVasSvg" viewBox="0 0 660 230" style="width:100%;height:auto;overflow:visible;"></svg>
         </div>
 
-        <!-- 선택된 날짜/부위 특이점 요약 박스 -->
-        <div id="pointNoteBox" style="margin-top:9px;padding:10px 13px;border-radius:9px;background:#f2f8f9;border:1px solid #cfe3e7;font-size:12px;color:#365057;line-height:1.5;"></div>
+        <!-- 선택 날짜/부위 특이점 콜아웃 -->
+        <div id="pointNoteBox" style="margin-top:10px;padding:10px 13px;border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0;font-size:12px;color:#334155;line-height:1.55;"></div>
 
-        <!-- 단일톤 파스텔 농도 기반 히트맵 표 -->
+        <!-- 파스텔 히트맵 매트릭스 표 -->
         <div style="overflow-x:auto;">
-          <table class="matrix-table" id="pastelMatrixTable"></table>
+          <table class="matrix-table" id="trendyMatrixTable"></table>
         </div>
       </div>
 
@@ -337,28 +442,36 @@ def render_pastel_first_page(current_log, all_logs):
         let focusedIdx = ALL_LOGS.findIndex(l => l.date === '{selected_date_str}');
         if (focusedIdx < 0) focusedIdx = ALL_LOGS.length - 1;
 
-        // 단일톤 파스텔 셀 배경 농도 (점수가 높을수록 조금 더 진한 세이지 블루)
-        function getPastelCellStyle(sc) {{
-          if (sc <= 1) return 'background:#f9fcfd;color:#5a7d85;';
-          if (sc <= 3) return 'background:#edf6f8;color:#3d656d;font-weight:600;';
-          if (sc <= 5) return 'background:#d9ecef;color:#2c4c54;font-weight:700;';
-          return 'background:#c2dfe4;color:#1e383f;font-weight:800;';
+        // 점수대별 부드러운 파스텔 톤 (민트 → 스카이 → 버터 → 코랄)
+        function getScorePastelCell(sc) {{
+          if (sc <= 1) return 'background:#effaf5;color:#246b52;font-weight:700;';
+          if (sc <= 3) return 'background:#f0f7fe;color:#245b8f;font-weight:700;';
+          if (sc <= 5) return 'background:#fdf9eb;color:#856414;font-weight:700;';
+          return 'background:#fdf2f2;color:#9b3b3b;font-weight:800;';
         }}
 
-        function setPart(key) {{ selectedPart = key; renderPastelChart(); }}
-        function setDateIdx(idx) {{ focusedIdx = idx; renderPastelChart(); }}
+        function setPart(key) {{ selectedPart = key; renderChart(); }}
+        function setDateIdx(idx) {{ focusedIdx = idx; renderChart(); }}
 
-        function renderPastelChart() {{
+        function renderChart() {{
+          // 1. 필터 버튼 렌더링
           const bar = document.getElementById('partFilterBar');
-          let btns = `<button class="filter-btn ${{selectedPart === 'ALL' ? 'active' : ''}}" onclick="setPart('ALL')">전체 평균·부위 추이</button>`;
+          let btns = `<button class="filter-btn ${{selectedPart === 'ALL' ? 'active-all' : ''}}" onclick="setPart('ALL')">전체 6부위</button>`;
           PART_META.forEach(m => {{
             const act = selectedPart === m.key;
-            btns += `<button class="filter-btn ${{act ? 'active' : ''}}" onclick="setPart('${{m.key}}')">${{m.short}}</button>`;
+            const style = act
+              ? `background:${{m.color}};color:#ffffff;border-color:${{m.color}};font-weight:700;`
+              : `background:${{m.bg}};color:${{m.text}};border-color:${{m.color}}66;`;
+            const dot = act
+              ? `<span class="color-dot" style="background:#ffffff;"></span>`
+              : `<span class="color-dot" style="background:${{m.color}};"></span>`;
+            btns += `<button class="filter-btn" style="${{style}}" onclick="setPart('${{m.key}}')">${{dot}}${{m.short}}</button>`;
           }});
           bar.innerHTML = btns;
 
-          const svg = document.getElementById('pastelVasSvg');
-          const W = 660, H = 225, padL = 36, padR = 24, padT = 24, padB = 34;
+          // 2. SVG 차트 렌더링
+          const svg = document.getElementById('trendyVasSvg');
+          const W = 660, H = 230, padL = 36, padR = 24, padT = 26, padB = 34;
           const plotW = W - padL - padR, plotH = H - padT - padB;
           const n = ALL_LOGS.length;
           const xPos = (i) => n === 1 ? padL + plotW / 2 : padL + (i * plotW) / (n - 1);
@@ -367,12 +480,12 @@ def render_pastel_first_page(current_log, all_logs):
           let out = '';
           [0, 2, 4, 6, 8, 10].forEach(v => {{
             const y = yPos(v);
-            out += `<line x1="${{padL}}" y1="${{y}}" x2="${{W - padR}}" y2="${{y}}" stroke="#e3eff2" stroke-width="1"/>`;
-            out += `<text x="${{padL - 7}}" y="${{y + 4}}" text-anchor="end" font-size="10" fill="#769299">${{v}}</text>`;
+            out += `<line x1="${{padL}}" y1="${{y}}" x2="${{W - padR}}" y2="${{y}}" stroke="#e9eef5" stroke-width="1"/>`;
+            out += `<text x="${{padL - 8}}" y="${{y + 4}}" text-anchor="end" font-size="10" fill="#94a3b8">${{v}}</text>`;
           }});
 
           const fx = xPos(focusedIdx);
-          out += `<line x1="${{fx}}" y1="${{padT - 6}}" x2="${{fx}}" y2="${{H - padB}}" stroke="#8fb8c0" stroke-width="1.5" stroke-dasharray="3 3"/>`;
+          out += `<line x1="${{fx}}" y1="${{padT - 8}}" x2="${{fx}}" y2="${{H - padB}}" stroke="#cbd5e1" stroke-width="1.5" stroke-dasharray="3 3"/>`;
 
           ALL_LOGS.forEach((l, i) => {{
             const x = xPos(i);
@@ -380,90 +493,98 @@ def render_pastel_first_page(current_log, all_logs):
             const avg = (PART_META.reduce((a, m) => a + l.parts[m.key].score, 0) / PART_META.length).toFixed(1);
             out += `
               <g style="cursor:pointer;" onclick="setDateIdx(${{i}})">
-                <rect x="${{x - 24}}" y="${{H - padB + 5}}" width="48" height="20" rx="5" fill="${{sel ? '#5b8a92' : '#edf6f8'}}"/>
-                <text x="${{x}}" y="${{H - padB + 19}}" text-anchor="middle" font-size="10.5" font-weight="700" fill="${{sel ? '#ffffff' : '#4f7c85'}}">${{l.date.slice(5)}}</text>
-                <text x="${{x}}" y="${{padT - 9}}" text-anchor="middle" font-size="9.5" font-weight="700" fill="${{sel ? '#3d656d' : '#8aaab2'}}">평균 ${{avg}}</text>
+                <rect x="${{x - 24}}" y="${{H - padB + 6}}" width="48" height="20" rx="6" fill="${{sel ? '#3b4963' : '#f1f5f9'}}"/>
+                <text x="${{x}}" y="${{H - padB + 20}}" text-anchor="middle" font-size="10.5" font-weight="700" fill="${{sel ? '#ffffff' : '#475569'}}">${{l.date.slice(5)}}</text>
+                <text x="${{x}}" y="${{padT - 10}}" text-anchor="middle" font-size="9.5" font-weight="700" fill="${{sel ? '#3b4963' : '#94a3b8'}}">평균 ${{avg}}</text>
               </g>
             `;
           }});
 
-          // 개별 부위 파스텔 라인
+          // 6개 부위별 개별 파스텔 라인
           PART_META.forEach((m, idx) => {{
             const isTarget = selectedPart === m.key;
             const isAll = selectedPart === 'ALL';
-            const op = isTarget ? '1' : (isAll ? '0.45' : '0.12');
-            const sw = isTarget ? '3.2' : '1.8';
-            const off = isAll ? (idx - 2.5) * 0.8 : 0;
+            const op = (isTarget || isAll) ? '0.95' : '0.13';
+            const sw = isTarget ? '3.4' : '2.2';
+            const off = isAll ? (idx - 2.5) * 1.15 : 0;
             const pts = ALL_LOGS.map((l, i) => `${{xPos(i)}},${{yPos(l.parts[m.key].score) + off}}`).join(' ');
-            const strokeCol = isTarget ? '#4f7c85' : m.color;
 
-            out += `<polyline fill="none" stroke="${{strokeCol}}" stroke-width="${{sw}}" stroke-dasharray="${{isTarget ? '' : m.dash}}" opacity="${{op}}" points="${{pts}}" stroke-linecap="round"/>`;
+            out += `<polyline fill="none" stroke="${{m.color}}" stroke-width="${{sw}}" opacity="${{op}}" points="${{pts}}" stroke-linecap="round" stroke-linejoin="round"/>`;
 
             ALL_LOGS.forEach((l, i) => {{
               const sc = l.parts[m.key].score;
               const cx = xPos(i), cy = yPos(sc) + off;
-              out += `<circle cx="${{cx}}" cy="${{cy}}" r="${{isTarget ? 5 : 3.5}}" fill="${{strokeCol}}" stroke="#ffffff" stroke-width="1.2" opacity="${{op}}" style="cursor:pointer;" onclick="setDateIdx(${{i}})"/>`;
-              if (isTarget) {{
-                out += `<text x="${{cx}}" y="${{cy - 8}}" text-anchor="middle" font-size="10.5" font-weight="800" fill="#3d656d">${{sc}}점</text>`;
-              }}
+              const r = isTarget ? 5.2 : (i === focusedIdx ? 4.8 : 3.8);
+              out += `
+                <g style="cursor:pointer;" opacity="${{op}}" onclick="setDateIdx(${{i}})">
+                  <circle cx="${{cx}}" cy="${{cy}}" r="${{r}}" fill="${{m.color}}" stroke="#ffffff" stroke-width="1.5">
+                    <title>${{l.date}} ${{m.short}}: ${{sc}}점 (${{l.parts[m.key].note || '-'}})</title>
+                  </circle>
+                  ${{isTarget ? `<text x="${{cx}}" y="${{cy - 9}}" text-anchor="middle" font-size="10.5" font-weight="800" fill="${{m.text}}">${{sc}}점</text>` : ''}}
+                </g>
+              `;
             }});
           }});
 
-          // 전체 보기일 때 평균 추이 대표 파스텔 실선 강조
-          if (selectedPart === 'ALL') {{
-            const avgPts = ALL_LOGS.map((l, i) => {{
-              const avg = PART_META.reduce((a, m) => a + l.parts[m.key].score, 0) / PART_META.length;
-              return `${{xPos(i)}},${{yPos(avg)}}`;
-            }}).join(' ');
-            out += `<polyline fill="none" stroke="#3d656d" stroke-width="3" points="${{avgPts}}" stroke-linecap="round"/>`;
-            ALL_LOGS.forEach((l, i) => {{
-              const avg = PART_META.reduce((a, m) => a + l.parts[m.key].score, 0) / PART_META.length;
-              out += `<circle cx="${{xPos(i)}}" cy="${{yPos(avg)}}" r="4.8" fill="#3d656d" stroke="#ffffff" stroke-width="1.5" style="cursor:pointer;" onclick="setDateIdx(${{i}})"/>`;
-            }});
-          }}
-
           svg.innerHTML = out;
 
-          // 특이점 요약 박스 업데이트
+          // 3. 특이점 요약 콜아웃 업데이트
           const fLog = ALL_LOGS[focusedIdx];
           const box = document.getElementById('pointNoteBox');
           if (selectedPart === 'ALL') {{
-            const pNotes = PART_META.map(m => `<strong>${{m.short}}(${{fLog.parts[m.key].score}}):</strong> ${{fLog.parts[m.key].note || '-'}}`).join(' · ');
+            const pNotes = PART_META.map(m =>
+              `<span style="display:inline-flex;align-items:center;gap:4px;margin-right:8px;">
+                <span class="color-dot" style="background:${{m.color}};"></span>
+                <strong>${{m.short}}(${{fLog.parts[m.key].score}}):</strong> ${{fLog.parts[m.key].note || '-'}}
+              </span>`
+            ).join('');
+            box.style.background = '#f8fafc';
+            box.style.borderColor = '#e2e8f0';
             box.innerHTML = `
-              <div><strong>[${{fLog.date}} 특이점]</strong> 수면 ★${{fLog.sleep.score}}점 (${{fLog.sleep.posture}}) · 좌식 ${{fLog.sleep.sittingHours}}h · 컨디션: ${{fLog.patientWorkoutNote || '-'}}</div>
-              <div style="margin-top:3px;font-size:11.5px;color:#52757c;">${{pNotes}}</div>
+              <div style="margin-bottom:4px;"><strong>[${{fLog.date}} 특이점]</strong> 수면 ★${{fLog.sleep.score}}점 (${{fLog.sleep.posture}}) · 좌식 ${{fLog.sleep.sittingHours}}h</div>
+              <div style="font-size:11.5px;color:#475569;line-height:1.6;">${{pNotes}}</div>
             `;
           }} else {{
             const pm = PART_META.find(m => m.key === selectedPart);
             const diff = fLog.parts[pm.key].score - ALL_LOGS[0].parts[pm.key].score;
-            const dStr = diff < 0 ? `첫날 대비 ${{-diff}}점 감소` : (diff > 0 ? `첫날 대비 +${{diff}}점` : '첫날과 동일');
+            const dStr = diff < 0 ? `첫날 대비 ${{-diff}}점 호전` : (diff > 0 ? `첫날 대비 +${{diff}}점` : '첫날과 동일');
+            box.style.background = pm.bg;
+            box.style.borderColor = pm.color + '88';
             box.innerHTML = `
-              <div><strong>[${{pm.name}} · ${{fLog.date}}]</strong> VAS ${{fLog.parts[pm.key].score}}점 (${{dStr}}) | 특이점: <strong>${{fLog.parts[pm.key].note || '-'}}</strong></div>
-              <div style="margin-top:2px;font-size:11.5px;color:#52757c;">당일 컨디션 메모: ${{fLog.patientWorkoutNote || '-'}}</div>
+              <div style="color:${{pm.text}};"><strong>[${{pm.name}} · ${{fLog.date}}]</strong> VAS ${{fLog.parts[pm.key].score}}점 (${{dStr}})</div>
+              <div style="margin-top:3px;color:#334155;"><strong>특이점 메모:</strong> ${{fLog.parts[pm.key].note || '-'}}</div>
+              <div style="margin-top:2px;font-size:11.5px;color:#64748b;">당일 컨디션: ${{fLog.patientWorkoutNote || '-'}}</div>
             `;
           }}
 
-          // 매트릭스 표 렌더링
-          const tbl = document.getElementById('pastelMatrixTable');
-          let th = `<tr><th>부위</th>` + ALL_LOGS.map((l, i) => `<th style="cursor:pointer;" onclick="setDateIdx(${{i}})">${{l.date.slice(5)}}</th>`).join('') + `<th>변화</th><th>선택일 특이점 메모</th></tr>`;
+          // 4. 히트맵 매트릭스 표 렌더링
+          const tbl = document.getElementById('trendyMatrixTable');
+          let th = `<tr><th style="text-align:left;padding-left:10px;">부위</th>`
+            + ALL_LOGS.map((l, i) => `<th style="cursor:pointer;${{i === focusedIdx ? 'background:#eef2f7;color:#1e293b;' : ''}}" onclick="setDateIdx(${{i}})">${{l.date.slice(5)}}</th>`).join('')
+            + `<th>변화</th><th style="text-align:left;padding-left:8px;">선택일 특이점</th></tr>`;
+
           let tr = PART_META.map(m => {{
             const d = ALL_LOGS[ALL_LOGS.length - 1].parts[m.key].score - ALL_LOGS[0].parts[m.key].score;
-            const dTxt = d < 0 ? `<span style="color:#3d656d;font-weight:800;">▼${{d}}</span>` : (d > 0 ? `<span style="color:#769299;">▲+${{d}}</span>` : '-');
+            const dTxt = d < 0
+              ? `<span style="color:#2c7058;font-weight:800;">▼${{d}}</span>`
+              : (d > 0 ? `<span style="color:#9b3b3b;font-weight:700;">▲+${{d}}</span>` : `<span style="color:#94a3b8;">-</span>`);
             const note = fLog.parts[m.key].note || '-';
             return `<tr style="cursor:pointer;" onclick="setPart('${{m.key}}')">
-              <td style="font-weight:700;">${{m.short}}</td>` +
-              ALL_LOGS.map(l => `<td style="${{getPastelCellStyle(l.parts[m.key].score)}}">${{l.parts[m.key].score}}</td>`).join('') +
-              `<td>${{dTxt}}</td><td style="text-align:left;padding-left:8px;color:#52757c;">${{note}}</td></tr>`;
+              <td style="text-align:left;padding-left:10px;font-weight:700;white-space:nowrap;">
+                <span class="color-dot" style="background:${{m.color}};margin-right:6px;"></span>${{m.short}}
+              </td>` +
+              ALL_LOGS.map(l => `<td style="${{getScorePastelCell(l.parts[m.key].score)}}">${{l.parts[m.key].score}}</td>`).join('') +
+              `<td>${{dTxt}}</td><td style="text-align:left;padding-left:8px;color:#475569;">${{note}}</td></tr>`;
           }}).join('');
           tbl.innerHTML = th + tr;
         }}
 
-        renderPastelChart();
+        renderChart();
       </script>
     </body>
     </html>
     """
-    dynamic_h = min(980, max(760, 560 + len(workouts) * 74))
+    dynamic_h = min(1020, max(780, 580 + len(workouts) * 76))
     components.html(html_code, height=dynamic_h, scrolling=True)
 
 
@@ -528,9 +649,9 @@ tab1, tab2, tab3 = st.tabs([
     "원장님 소견",
 ])
 
-# --- TAB 1: 운동 요약 최우선 + 단일톤 파스텔 VAS 추이 그래프 + 방문일 근황 ---
+# --- TAB 1: 운동 요약 최우선 + 멀티 파스텔 VAS 추이 그래프 + 방문일 근황 ---
 with tab1:
-    render_pastel_first_page(current_log, db["logs"])
+    render_trendy_pastel_first_page(current_log, db["logs"])
 
     d_op = current_log.get("directorOpinion", {})
     if d_op.get("assessment") or d_op.get("prescription"):
