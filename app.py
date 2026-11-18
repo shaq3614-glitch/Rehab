@@ -22,7 +22,7 @@ st.markdown(
         background-color: #fafbfc;
     }
     .block-container {
-        padding-top: 1.5rem !important;
+        padding-top: 3.8rem !important;
         padding-bottom: 3rem !important;
         max-width: 780px !important;
     }
@@ -311,7 +311,7 @@ def render_trendy_pastel_first_page(current_log, all_logs):
         body {{
           font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
           margin: 0;
-          padding: 2px;
+          padding: 8px 4px;
           background: transparent;
           color: #2d3748;
         }}
