@@ -13,7 +13,7 @@ st.set_page_config(
 )
 
 DB_FILE = "rehab_shared_data.json"
-SCHEMA_VERSION = "2026-11-20-v12-dual-mode"
+SCHEMA_VERSION = "2026-11-20-v13-keep-feeling"
 
 # 6개 부위별 트렌디 파스텔 팔레트 (코랄·피치·버터·민트·스카이·라벤더)
 PART_META = [
@@ -95,18 +95,109 @@ WORKOUTS_1114 = [
     {"id": "w-405", "text": "다리 한쪽 올려 옆으로 돌리기", "duration": "10회 × 3세트", "rpe": 5, "feeling": "회전 반경을 조금 줄여서 돌리니 고관절 걸림 없이 부드럽게 수행됨", "done": True},
 ]
 
-WORKOUTS_1115 = [
-    {"id": "w-501", "text": "무릎꿇고 골반 하늘로 올리기", "duration": "12초 × 3세트", "rpe": 6, "feeling": "아침 7시 반 조기 기상으로 첫 세트엔 허리가 약간 뻣뻣했으나 2세트부터 풀림", "done": True},
-    {"id": "w-502", "text": "플랭크 (다리 하나씩 들기)", "duration": "1분(한발 10초) × 2세트", "rpe": 8, "feeling": "수면이 조금 부족해 2세트 마지막 다리 들기 10초 구간에서 코어 피로도 높았음", "done": True},
-    {"id": "w-503", "text": "사이드로 누워 의자에 다리 올려 버티기", "duration": "30초 × 2세트", "rpe": 8, "feeling": "내전근과 옆구리 자극 강하게 들어옴, 왼쪽 어깨 겨드랑이 지지 집중", "done": True},
-    {"id": "w-504", "text": "어깨 슈러그 (16kg)", "duration": "30회 × 3세트", "rpe": 7, "feeling": "턱 당김 유지하며 30회씩 수행, 상부 승모근 자극 일정함", "done": True},
-    {"id": "w-505", "text": "다리 한쪽 올려 옆으로 돌리기", "duration": "10회 × 3세트", "rpe": 6, "feeling": "고관절을 너무 크게 돌릴 때만 약간의 뻐근함이 있어 적정 각도로 조절함", "done": True},
+# 2026-11-15 ~ 2026-11-20 공통 7대 개인 운동 루틴 및 캡처본 수면·VAS 데이터
+WORKOUTS_1115_TO_1120_TEMPLATE = [
+    {
+        "text": "고관절 굴곡근 운동(누워서 무릎을 손으로 저항감 주는거)",
+        "duration": "12초 × 3세트",
+        "rpe": 6,
+        "feeling": "고관절에 자극 잘오므로 누워있을때 계속 꾸준히 해주기. ※ 각도는 몸 안쪽/ 직각",
+        "done": True,
+    },
+    {
+        "text": "플랭크 (다리 하나씩 들기)",
+        "duration": "1분(한발 10초) × 2세트",
+        "rpe": 8,
+        "feeling": "수면이 조금 부족해 2세트 마지막 다리 들기 10초 구간에서 코어 피로도 높았음",
+        "done": True,
+    },
+    {
+        "text": "사이드로 누워 의자에 다리 올려 버티기",
+        "duration": "30초 × 2세트",
+        "rpe": 8,
+        "feeling": "내전근과 옆구리 자극 강하게 들어옴, 왼쪽 어깨 겨드랑이 지지 집중",
+        "done": True,
+    },
+    {
+        "text": "어깨 슈러그 (16kg)",
+        "duration": "30회 × 3세트",
+        "rpe": 7,
+        "feeling": "턱 당김 유지하며 30회씩 수행, 상부 승모근 자극 일정함",
+        "done": True,
+    },
+    {
+        "text": "다리 한쪽 올려 옆으로 돌리기",
+        "duration": "10회 × 3세트",
+        "rpe": 6,
+        "feeling": "고관절을 너무 크게 돌릴 때만 약간의 뻐근함이 있어 적정 각도로 조절함",
+        "done": True,
+    },
+    {
+        "text": "고관절 내회전 운동(앉아서X누워서)",
+        "duration": "60초X세트",
+        "rpe": 4,
+        "feeling": "앉았을때 무릎각도 90도일때 햄스트링이 늘어나서 더 힘듬. 그러므로 무릎 각도는 90도 이하로 하고 고관절 내회전에만 집중할것",
+        "done": True,
+    },
+    {
+        "text": "서서 고관절 접으면서 사이드벤딩",
+        "duration": "5초/5세트",
+        "rpe": 8,
+        "feeling": "한세트를 완벽히 할 수 있을때까지 연습해야함 왼쪽할때 중심자체를 잡기 힘듦.",
+        "done": True,
+    },
+]
+
+CAPTURED_SLEEP_1115_TO_1120 = {
+    "score": 3,
+    "posture": "뒤척일 때 뻐근함",
+    "sittingHours": 0,
+}
+
+CAPTURED_PARTS_1115_TO_1120 = {
+    "lumbar": {"score": 3, "note": "중간에 깨지 않고 숙면함, 아침 강직만 약간 있음"},
+    "leftHip": {"score": 3, "note": "고관절이 심하게 회전될때"},
+    "leftAnteriorShoulder": {"score": 1, "note": "왼쪽으로 몸이 기울때, 아픔"},
+    "rightWrist": {"score": 0, "note": "체중 싣고 땅짚을때"},
+    "rightKnee": {"score": 1, "note": "스쿼트 할때"},
+    "cervical": {"score": 2, "note": "가끔 컴퓨터할때 뻐근함"},
+}
+
+
+def build_synced_log(date_str: str):
+    tag = date_str.replace("-", "")
+    workout_items = []
+    for idx, item in enumerate(WORKOUTS_1115_TO_1120_TEMPLATE, start=1):
+        copied = dict(item)
+        copied["id"] = f"w-{tag}-{idx}"
+        workout_items.append(copied)
+    return {
+        "date": date_str,
+        "sleep": dict(CAPTURED_SLEEP_1115_TO_1120),
+        "parts": json.loads(json.dumps(CAPTURED_PARTS_1115_TO_1120)),
+        "workoutList": workout_items,
+        "patientWorkoutNote": "일요일이여서 오래자고 싶었는데 7시반에 깨서 잠 만족도가 별로임." if date_str == "2026-11-15" else "7대 개인 재활 루틴(고관절 굴곡·내회전 및 서서 사이드벤딩 포함) 수행 완료",
+        "directorOpinion": {
+            "directorName": "황인준 대표 (피지컬그라운드)",
+            "assessment": "일요일 조기 기상으로 컨디션이 아쉬웠음에도 목표 유지시간과 세트를 모두 완수하셨습니다." if date_str == "2026-11-15" else "",
+            "prescription": "방문 수업 시 사이드 버티기 어깨 지지 자세와 고관절 회전 각도·왼쪽 사이드벤딩 중심 잡기를 함께 점검하겠습니다." if date_str == "2026-11-15" else "",
+        },
+    }
+
+
+SYNCED_DATES = [
+    "2026-11-15",
+    "2026-11-16",
+    "2026-11-17",
+    "2026-11-18",
+    "2026-11-19",
+    "2026-11-20",
 ]
 
 DEFAULT_DATA = {
     "schemaVersion": SCHEMA_VERSION,
     "ownerPin": "0208",
-    "selectedDate": "2026-11-15",
+    "selectedDate": "2026-11-20",
     "logs": [
         {
             "date": "2026-11-11",
@@ -190,38 +281,20 @@ DEFAULT_DATA = {
                 "prescription": "다리 옆으로 돌리기 운동은 걸리는 느낌이 없는 각도 내에서만 컨트롤하며 10회 3세트를 유지합니다.",
             },
         },
-        {
-            "date": "2026-11-15",
-            "sleep": {"score": 3, "posture": "뒤척일 때 뻐근함", "sittingHours": 0},
-            "parts": {
-                "lumbar": {"score": 3, "note": "중간에 깨지 않고 숙면함, 아침 강직만 약간 있음"},
-                "leftHip": {"score": 3, "note": "고관절이 심하게 회전될때"},
-                "leftAnteriorShoulder": {"score": 1, "note": "왼쪽으로 몸이 기울때, 아픔"},
-                "rightWrist": {"score": 0, "note": "체중 싣고 땅짚을때"},
-                "rightKnee": {"score": 1, "note": "스쿼트 할때"},
-                "cervical": {"score": 2, "note": "가끔 컴퓨터할때 뻐근함"},
-            },
-            "workoutList": json.loads(json.dumps(WORKOUTS_1115)),
-            "patientWorkoutNote": "일요일이여서 오래자고 싶었는데 7시반에 깨서 잠 만족도가 별로임.",
-            "directorOpinion": {
-                "directorName": "황인준 대표 (피지컬그라운드)",
-                "assessment": "일요일 조기 기상으로 컨디션이 아쉬웠음에도 5가지 운동의 목표 유지시간과 세트를 모두 완수하셨습니다.",
-                "prescription": "방문 수업 시 사이드 버티기 어깨 지지 자세와 고관절 회전 각도를 함께 잡아보겠습니다.",
-            },
-        },
+        *[build_synced_log(d) for d in SYNCED_DATES],
     ],
 }
 
 
 def normalize_db(data):
-    """기존 저장 파일의 로그를 손실 없이 보존하면서 누락된 필드만 안전하게 보완합니다."""
+    """저장된 로그의 누락된 필드를 안전하게 보완합니다."""
     if not isinstance(data, dict) or not isinstance(data.get("logs"), list) or len(data["logs"]) == 0:
         return json.loads(json.dumps(DEFAULT_DATA))
     data.setdefault("ownerPin", "0208")
     data.setdefault("selectedDate", data["logs"][-1]["date"])
     for log in data["logs"]:
-        log.setdefault("sleep", {"score": 3, "posture": "뒤척일 때 뻐근함", "sittingHours": 8})
-        log["sleep"].setdefault("sittingHours", 8)
+        log.setdefault("sleep", {"score": 3, "posture": "뒤척일 때 뻐근함", "sittingHours": 0})
+        log["sleep"].setdefault("sittingHours", 0)
         log.setdefault("parts", {})
         for m in PART_META:
             log["parts"].setdefault(m["key"], {"score": 0, "note": ""})
@@ -246,7 +319,21 @@ def load_db():
         try:
             with open(DB_FILE, "r", encoding="utf-8") as f:
                 saved = json.load(f)
-            return normalize_db(saved)
+            saved = normalize_db(saved)
+            # v13 최초 업그레이드 시 2026-11-15 ~ 2026-11-20 데이터를 새 7대 운동 및 캡처본 기준으로 자동 동기화
+            if saved.get("schemaVersion") != SCHEMA_VERSION:
+                logs_by_date = {l["date"]: l for l in saved["logs"]}
+                for d in SYNCED_DATES:
+                    existing_opinion = logs_by_date.get(d, {}).get("directorOpinion")
+                    new_entry = build_synced_log(d)
+                    if existing_opinion and (existing_opinion.get("assessment") or existing_opinion.get("prescription")):
+                        new_entry["directorOpinion"] = existing_opinion
+                    logs_by_date[d] = new_entry
+                saved["logs"] = [logs_by_date[k] for k in sorted(logs_by_date.keys())]
+                saved["selectedDate"] = "2026-11-20"
+                saved["schemaVersion"] = SCHEMA_VERSION
+                save_db(saved)
+            return saved
         except Exception:
             pass
     with open(DB_FILE, "w", encoding="utf-8") as f:
@@ -289,7 +376,6 @@ def inject_mode_css(is_mobile: bool):
             max-width: {max_w} !important;
             margin: 0 auto !important;
         }}
-        /* 버튼 및 탭 터치 영역 최적화 */
         .stTabs [data-baseweb="tab"] {{
             padding: {'8px 10px' if is_mobile else '10px 18px'} !important;
             font-size: {'13px' if is_mobile else '14px'} !important;
@@ -323,7 +409,6 @@ def build_workout_summary_html(current_log, is_mobile: bool):
             )
 
             if is_mobile:
-                # 모바일 전용: 제목 1줄 + 배지 2줄 분리로 텍스트 겹침 완전 방지
                 rows_html += f"""
                 <div style="border:1px solid #e6ebf2;background:#ffffff;border-radius:12px;padding:12px 13px;margin-bottom:9px;box-shadow:0 1px 2px rgba(15,23,42,0.02);">
                   <div style="display:flex;align-items:flex-start;gap:7px;font-size:14px;font-weight:700;color:#1e293b;line-height:1.35;">
@@ -339,7 +424,6 @@ def build_workout_summary_html(current_log, is_mobile: bool):
                 </div>
                 """
             else:
-                # 태블릿·PC 전용: 넓은 가로 정렬
                 rows_html += f"""
                 <div style="border:1px solid #e6ebf2;background:#ffffff;border-radius:12px;padding:12px 15px;margin-bottom:9px;box-shadow:0 1px 2px rgba(15,23,42,0.02);">
                   <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;">
@@ -387,11 +471,10 @@ def render_first_page_component(current_log, all_logs, is_mobile: bool):
     selected_date_str = current_log["date"]
     mode_js_bool = "true" if is_mobile else "false"
 
-    # 태블릿·PC 모드에서는 좌측 [오늘의 운동 요약] / 우측 [VAS 추이 그래프 & 표] 2단 대시보드로 한눈에 배치
     layout_wrapper_css = (
         "display: block;"
         if is_mobile
-        else "display: grid; grid-template-columns: 1.02fr 1.18fr; gap: 16px; align-items: start;"
+        else "display: grid; grid-template-columns: 1.04fr 1.16fr; gap: 16px; align-items: start;"
     )
 
     svg_viewbox = "0 0 380 215" if is_mobile else "0 0 580 235"
@@ -458,7 +541,7 @@ def render_first_page_component(current_log, all_logs, is_mobile: bool):
           width: 100%;
           border-collapse: separate;
           border-spacing: 0;
-          font-size: {'11.5px' if is_mobile else '11.5px'};
+          font-size: 11px;
           margin-top: 12px;
           border: 1px solid #e6ebf2;
           border-radius: 10px;
@@ -467,9 +550,10 @@ def render_first_page_component(current_log, all_logs, is_mobile: bool):
         .matrix-table th, .matrix-table td {{
           border-bottom: 1px solid #edf2f7;
           border-right: 1px solid #edf2f7;
-          padding: {'7px 4px' if is_mobile else '6px 5px'};
+          padding: 6px 4px;
           text-align: center;
           color: #334155;
+          white-space: nowrap;
         }}
         .matrix-table th:last-child, .matrix-table td:last-child {{ border-right: none; }}
         .matrix-table tr:last-child td {{ border-bottom: none; }}
@@ -477,7 +561,6 @@ def render_first_page_component(current_log, all_logs, is_mobile: bool):
           background: #f8fafc;
           font-weight: 700;
           color: #475569;
-          white-space: nowrap;
         }}
       </style>
     </head>
@@ -553,7 +636,7 @@ def render_first_page_component(current_log, all_logs, is_mobile: bool):
           const W = IS_MOBILE ? 380 : 580;
           const H = IS_MOBILE ? 215 : 235;
           const padL = IS_MOBILE ? 28 : 34;
-          const padR = IS_MOBILE ? 18 : 24;
+          const padR = IS_MOBILE ? 18 : 22;
           const padT = 26;
           const padB = 34;
           const plotW = W - padL - padR;
@@ -561,12 +644,15 @@ def render_first_page_component(current_log, all_logs, is_mobile: bool):
           const n = ALL_LOGS.length;
           const xPos = (i) => n === 1 ? padL + plotW / 2 : padL + (i * plotW) / (n - 1);
           const yPos = (v) => padT + plotH - (Math.min(10, Math.max(0, v)) / 10) * plotH;
+          const stepX = n > 1 ? plotW / (n - 1) : plotW;
+          const pillW = Math.min(IS_MOBILE ? 34 : 44, Math.max(25, stepX - 3));
+          const xFont = (IS_MOBILE && n >= 8) ? 8.5 : (n >= 10 ? 9.2 : 10);
 
           let out = '';
           [0, 2, 4, 6, 8, 10].forEach(v => {{
             const y = yPos(v);
             out += `<line x1="${{padL}}" y1="${{y}}" x2="${{W - padR}}" y2="${{y}}" stroke="#e9eef5" stroke-width="1"/>`;
-            out += `<text x="${{padL - 7}}" y="${{y + 4}}" text-anchor="end" font-size="${{IS_MOBILE ? 10.5 : 10}}" fill="#94a3b8">${{v}}</text>`;
+            out += `<text x="${{padL - 7}}" y="${{y + 4}}" text-anchor="end" font-size="10" fill="#94a3b8">${{v}}</text>`;
           }});
 
           const fx = xPos(focusedIdx);
@@ -576,12 +662,12 @@ def render_first_page_component(current_log, all_logs, is_mobile: bool):
             const x = xPos(i);
             const sel = i === focusedIdx;
             const avg = (PART_META.reduce((a, m) => a + l.parts[m.key].score, 0) / PART_META.length).toFixed(1);
-            const pillW = IS_MOBILE ? 42 : 48;
+            const shortDate = n >= 8 ? l.date.slice(5).replace('-', '/') : l.date.slice(5);
             out += `
               <g style="cursor:pointer;" onclick="setDateIdx(${{i}})">
-                <rect x="${{x - pillW / 2}}" y="${{H - padB + 6}}" width="${{pillW}}" height="20" rx="6" fill="${{sel ? '#3b4963' : '#f1f5f9'}}"/>
-                <text x="${{x}}" y="${{H - padB + 20}}" text-anchor="middle" font-size="${{IS_MOBILE ? 10 : 10.5}}" font-weight="700" fill="${{sel ? '#ffffff' : '#475569'}}">${{l.date.slice(5)}}</text>
-                <text x="${{x}}" y="${{padT - 10}}" text-anchor="middle" font-size="${{IS_MOBILE ? 9.5 : 10}}" font-weight="700" fill="${{sel ? '#3b4963' : '#94a3b8'}}">${{avg}}</text>
+                <rect x="${{x - pillW / 2}}" y="${{H - padB + 6}}" width="${{pillW}}" height="19" rx="5" fill="${{sel ? '#3b4963' : '#f1f5f9'}}"/>
+                <text x="${{x}}" y="${{H - padB + 19}}" text-anchor="middle" font-size="${{xFont}}" font-weight="700" fill="${{sel ? '#ffffff' : '#475569'}}">${{shortDate}}</text>
+                <text x="${{x}}" y="${{padT - 10}}" text-anchor="middle" font-size="${{xFont}}" font-weight="700" fill="${{sel ? '#3b4963' : '#94a3b8'}}">${{avg}}</text>
               </g>
             `;
           }});
@@ -599,13 +685,13 @@ def render_first_page_component(current_log, all_logs, is_mobile: bool):
             ALL_LOGS.forEach((l, i) => {{
               const sc = l.parts[m.key].score;
               const cx = xPos(i), cy = yPos(sc) + off;
-              const r = isTarget ? 5.2 : (i === focusedIdx ? 4.8 : 3.8);
+              const r = isTarget ? 5.0 : (i === focusedIdx ? 4.5 : 3.5);
               out += `
                 <g style="cursor:pointer;" opacity="${{op}}" onclick="setDateIdx(${{i}})">
-                  <circle cx="${{cx}}" cy="${{cy}}" r="${{r}}" fill="${{m.color}}" stroke="#ffffff" stroke-width="1.5">
+                  <circle cx="${{cx}}" cy="${{cy}}" r="${{r}}" fill="${{m.color}}" stroke="#ffffff" stroke-width="1.4">
                     <title>${{l.date}} ${{m.short}}: ${{sc}}점 (${{l.parts[m.key].note || '-'}})</title>
                   </circle>
-                  ${{isTarget ? `<text x="${{cx}}" y="${{cy - 9}}" text-anchor="middle" font-size="11" font-weight="800" fill="${{m.text}}">${{sc}}점</text>` : ''}}
+                  ${{isTarget ? `<text x="${{cx}}" y="${{cy - 8}}" text-anchor="middle" font-size="10.5" font-weight="800" fill="${{m.text}}">${{sc}}</text>` : ''}}
                 </g>
               `;
             }});
@@ -641,28 +727,22 @@ def render_first_page_component(current_log, all_logs, is_mobile: bool):
             `;
           }}
 
-          // 모바일에서는 표 가로 폭을 지키기 위해 특이점 메모 열을 생략(위 콜아웃에서 확인)하고, PC에서는 전체 출력
           const tbl = document.getElementById('trendyMatrixTable');
           let th = `<tr><th style="text-align:left;padding-left:8px;">부위</th>`
-            + ALL_LOGS.map((l, i) => `<th style="cursor:pointer;${{i === focusedIdx ? 'background:#eef2f7;color:#1e293b;' : ''}}" onclick="setDateIdx(${{i}})">${{l.date.slice(5)}}</th>`).join('')
-            + `<th>변화</th>`
-            + (IS_MOBILE ? '' : `<th style="text-align:left;padding-left:8px;">선택일 특이점</th>`)
-            + `</tr>`;
+            + ALL_LOGS.map((l, i) => `<th style="cursor:pointer;${{i === focusedIdx ? 'background:#eef2f7;color:#1e293b;' : ''}}" onclick="setDateIdx(${{i}})">${{l.date.slice(5).replace('-', '/')}}</th>`).join('')
+            + `<th>변화</th></tr>`;
 
           let tr = PART_META.map(m => {{
             const d = ALL_LOGS[ALL_LOGS.length - 1].parts[m.key].score - ALL_LOGS[0].parts[m.key].score;
             const dTxt = d < 0
               ? `<span style="color:#2c7058;font-weight:800;">▼${{d}}</span>`
               : (d > 0 ? `<span style="color:#9b3b3b;font-weight:700;">▲+${{d}}</span>` : `<span style="color:#94a3b8;">-</span>`);
-            const note = fLog.parts[m.key].note || '-';
             return `<tr style="cursor:pointer;" onclick="setPart('${{m.key}}')">
-              <td style="text-align:left;padding-left:8px;font-weight:700;white-space:nowrap;">
+              <td style="text-align:left;padding-left:8px;font-weight:700;">
                 <span class="color-dot" style="background:${{m.color}};margin-right:5px;"></span>${{m.short}}
               </td>` +
               ALL_LOGS.map(l => `<td style="${{getScorePastelCell(l.parts[m.key].score)}}">${{l.parts[m.key].score}}</td>`).join('') +
-              `<td>${{dTxt}}</td>` +
-              (IS_MOBILE ? '' : `<td style="text-align:left;padding-left:8px;color:#475569;">${{note}}</td>`) +
-              `</tr>`;
+              `<td>${{dTxt}}</td></tr>`;
           }}).join('');
           tbl.innerHTML = th + tr;
         }}
@@ -673,9 +753,9 @@ def render_first_page_component(current_log, all_logs, is_mobile: bool):
     </html>
     """
     if is_mobile:
-        dynamic_h = max(1120, 760 + len(workouts) * 105)
+        dynamic_h = max(1320, 780 + len(workouts) * 116)
     else:
-        dynamic_h = max(760, 420 + len(workouts) * 78)
+        dynamic_h = max(840, 260 + len(workouts) * 92)
     components.html(html_code, height=dynamic_h, scrolling=True)
 
 
@@ -698,6 +778,7 @@ sel_idx = dates.index(db["selectedDate"]) if db["selectedDate"] in dates else le
 
 
 def create_next_date_log():
+    """새 일지 추가 시 기존 운동 목록의 '느낌(feeling)' 내용을 공백으로 지우지 않고 그대로 유지합니다."""
     last_log = db["logs"][-1]
     next_dt = (datetime.strptime(last_log["date"], "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
     if next_dt not in dates:
@@ -705,9 +786,8 @@ def create_next_date_log():
         new_log["date"] = next_dt
         for i, w in enumerate(new_log.get("workoutList", [])):
             w["id"] = f"w-{int(datetime.now().timestamp())}-{i}"
-            w["feeling"] = ""
+            # 기존 운동의 feeling("느낌:"), duration, rpe는 그대로 유지하고 체크 상태만 새 날짜용으로 초기화
             w["done"] = False
-        new_log["patientWorkoutNote"] = ""
         new_log["directorOpinion"]["assessment"] = ""
         new_log["directorOpinion"]["prescription"] = ""
         db["logs"].append(new_log)
@@ -734,7 +814,6 @@ def render_auth_control():
 
 # --- 모드별 맞춤형 상단 헤더 ---
 if is_mobile:
-    # 모바일: 2줄 스택 구성으로 좁은 화면에서 버튼 찌그러짐 방지
     m_top1, m_top2 = st.columns([1.2, 1.3])
     with m_top1:
         st.markdown("#### 📋 재활·운동 일지")
@@ -764,7 +843,6 @@ if is_mobile:
     with m_ctrl3:
         render_auth_control()
 else:
-    # 태블릿·PC: 1줄 통합 헤더 바
     p_c1, p_c2, p_c3, p_c4, p_c5 = st.columns([2.4, 2.3, 1.8, 1.1, 1.3])
     with p_c1:
         st.markdown("#### 📋 재활·운동 일지")
@@ -825,7 +903,7 @@ with tab1:
             for w in lw:
                 st.markdown(f"- **{w['text']}** (`{w.get('duration', '-')}` | RPE {w.get('rpe', 7)})  \n  ↳ 느낌: {w.get('feeling') or '-'}")
 
-# --- TAB 2: 모드별 반응형 입력 폼 (모바일 1단 / 태블릿·PC 2~3단) ---
+# --- TAB 2: 모드별 반응형 입력 폼 ---
 with tab2:
     if not is_owner:
         st.caption("상단 [🔒 잠금 해제] 후 수정할 수 있습니다.")
@@ -956,7 +1034,7 @@ with tab2:
             p_opts = ["뒤척일 때 뻐근함", "똑바로 누울 때 찌릿함", "새벽·기상 직후 강직", "수면 중 불편감 없음"]
             cp = current_log["sleep"].get("posture", p_opts[0])
             sl_po = st.selectbox("수면 중 요추 상태", p_opts, index=p_opts.index(cp) if cp in p_opts else 0, disabled=not is_owner)
-            sl_st = st.number_input("좌식 시간", 0, 24, int(current_log["sleep"].get("sittingHours", 8)), disabled=not is_owner)
+            sl_st = st.number_input("좌식 시간", 0, 24, int(current_log["sleep"].get("sittingHours", 0)), disabled=not is_owner)
         else:
             sc1, sc2, sc3 = st.columns(3)
             with sc1:
@@ -966,7 +1044,7 @@ with tab2:
                 cp = current_log["sleep"].get("posture", p_opts[0])
                 sl_po = st.selectbox("수면 중 요추 상태", p_opts, index=p_opts.index(cp) if cp in p_opts else 0, disabled=not is_owner)
             with sc3:
-                sl_st = st.number_input("좌식 시간", 0, 24, int(current_log["sleep"].get("sittingHours", 8)), disabled=not is_owner)
+                sl_st = st.number_input("좌식 시간", 0, 24, int(current_log["sleep"].get("sittingHours", 0)), disabled=not is_owner)
 
         up_parts = {}
         for m in PART_META:
